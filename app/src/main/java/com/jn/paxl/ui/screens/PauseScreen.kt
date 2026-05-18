@@ -21,6 +21,9 @@ import com.jn.paxl.ui.theme.NeonGreen
 import com.jn.paxl.ui.theme.NeonPink
 import com.jn.paxl.ui.theme.NeonYellow
 
+import androidx.compose.ui.tooling.preview.Preview
+import com.jn.paxl.ui.theme.PaxlTheme
+
 @Composable
 fun PauseScreen(onResume: () -> Unit, onRestart: () -> Unit, onQuit: () -> Unit) {
     Box(
@@ -45,5 +48,13 @@ fun PauseScreen(onResume: () -> Unit, onRestart: () -> Unit, onQuit: () -> Unit)
             Spacer(Modifier.height(16.dp))
             NeonButton(text = "QUIT", color = NeonPink, onClick = onQuit)
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PauseScreenPreview() {
+    PaxlTheme {
+        PauseScreen(onResume = {}, onRestart = {}, onQuit = {})
     }
 }

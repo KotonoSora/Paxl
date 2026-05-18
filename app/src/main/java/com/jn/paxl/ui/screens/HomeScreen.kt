@@ -44,6 +44,10 @@ import com.jn.paxl.ui.theme.NeonPink
 import com.jn.paxl.ui.theme.NeonYellow
 import com.jn.paxl.viewmodel.GameViewModel
 
+import androidx.compose.ui.tooling.preview.Preview
+import com.jn.paxl.model.GameUiState
+import com.jn.paxl.ui.theme.PaxlTheme
+
 @Composable
 fun HomeScreen(
     viewModel: GameViewModel = viewModel(),
@@ -55,6 +59,28 @@ fun HomeScreen(
     onHelpClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    
+    HomeScreenContent(
+        uiState = uiState,
+        onPlayClick = onPlayClick,
+        onSettingsClick = onSettingsClick,
+        onShopClick = onShopClick,
+        onDailyChallengeClick = onDailyChallengeClick,
+        onLeaderboardClick = onLeaderboardClick,
+        onHelpClick = onHelpClick
+    )
+}
+
+@Composable
+fun HomeScreenContent(
+    uiState: GameUiState,
+    onPlayClick: () -> Unit,
+    onSettingsClick: () -> Unit,
+    onShopClick: () -> Unit,
+    onDailyChallengeClick: () -> Unit,
+    onLeaderboardClick: () -> Unit,
+    onHelpClick: () -> Unit
+) {
     val soundManager = LocalSoundManager.current
 
     Box(
@@ -177,5 +203,21 @@ fun HomeScreen(
                 )
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun HomeScreenPreview() {
+    PaxlTheme {
+        HomeScreenContent(
+            uiState = GameUiState(coins = 100),
+            onPlayClick = {},
+            onSettingsClick = {},
+            onShopClick = {},
+            onDailyChallengeClick = {},
+            onLeaderboardClick = {},
+            onHelpClick = {}
+        )
     }
 }

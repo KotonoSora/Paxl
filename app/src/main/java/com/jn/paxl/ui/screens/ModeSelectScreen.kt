@@ -24,6 +24,9 @@ import com.jn.paxl.ui.theme.NeonCyan
 import com.jn.paxl.ui.theme.NeonGreen
 import com.jn.paxl.ui.theme.NeonYellow
 
+import androidx.compose.ui.tooling.preview.Preview
+import com.jn.paxl.ui.theme.PaxlTheme
+
 @Composable
 fun ModeSelectScreen(
     onModeSelected: () -> Unit,
@@ -66,5 +69,13 @@ fun ModeSelectScreen(
                 onClick = onBack
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ModeSelectScreenPreview() {
+    PaxlTheme {
+        ModeSelectScreen(onModeSelected = {}, onLevelSelectClick = {}, onBack = {})
     }
 }

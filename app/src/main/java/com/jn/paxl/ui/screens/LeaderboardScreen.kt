@@ -23,6 +23,9 @@ import com.jn.paxl.ui.theme.NeonBlue
 import com.jn.paxl.ui.theme.NeonCyan
 import com.jn.paxl.ui.theme.SurfaceDark
 
+import androidx.compose.ui.tooling.preview.Preview
+import com.jn.paxl.ui.theme.PaxlTheme
+
 @Composable
 fun LeaderboardScreen(onBack: () -> Unit) {
     val mockLeaderboard = listOf(
@@ -51,6 +54,14 @@ fun LeaderboardScreen(onBack: () -> Unit) {
                 LeaderboardEntryRow(rank = index + 1, name = entry.first, score = entry.second)
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun LeaderboardScreenPreview() {
+    PaxlTheme {
+        LeaderboardScreen(onBack = {})
     }
 }
 

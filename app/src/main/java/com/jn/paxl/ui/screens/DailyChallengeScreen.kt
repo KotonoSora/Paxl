@@ -24,9 +24,26 @@ import com.jn.paxl.ui.theme.NeonYellow
 import com.jn.paxl.ui.theme.SurfaceDark
 import com.jn.paxl.viewmodel.GameViewModel
 
+import androidx.compose.ui.tooling.preview.Preview
+import com.jn.paxl.ui.theme.PaxlTheme
+
 @Composable
 fun DailyChallengeScreen(
     viewModel: GameViewModel = viewModel(),
+    onBack: () -> Unit,
+    onStartChallenge: () -> Unit = {}
+) {
+    DailyChallengeScreenContent(
+        onBack = onBack,
+        onStartChallenge = {
+            viewModel.startNewGame()
+            onStartChallenge()
+        }
+    )
+}
+
+@Composable
+fun DailyChallengeScreenContent(
     onBack: () -> Unit,
     onStartChallenge: () -> Unit = {}
 ) {
@@ -70,10 +87,15 @@ fun DailyChallengeScreen(
         NeonButton(
             text = "START CHALLENGE",
             color = NeonGreen,
-            onClick = {
-                viewModel.startNewGame()
-                onStartChallenge()
-            }
+            onClick = onStartChallenge
         )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DailyChallengeScreenPreview() {
+    PaxlTheme {
+        DailyChallengeScreenContent(onBack = {})
     }
 }

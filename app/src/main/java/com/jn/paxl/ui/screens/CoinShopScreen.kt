@@ -32,11 +32,36 @@ import com.jn.paxl.ui.theme.NeonCyan
 import com.jn.paxl.ui.theme.NeonYellow
 import com.jn.paxl.viewmodel.GameViewModel
 
+import androidx.compose.ui.tooling.preview.Preview
+import com.jn.paxl.model.GameUiState
+import com.jn.paxl.repository.StoreProduct
+import com.jn.paxl.ui.theme.PaxlTheme
+
 @Composable
 fun CoinShopScreen(viewModel: GameViewModel, onBack: () -> Unit) {
     val uiState by viewModel.uiState.collectAsState()
     val products by viewModel.shopProducts.collectAsState()
     val context = LocalContext.current
+    
+    CoinShopScreenContent(
+        uiState = uiState,
+        products = products,
+        onBack = onBack,
+        onPurchase = { product ->
+            (context as? Activity)?.let { activity ->
+                viewModel.purchaseCoins(activity, product)
+            }
+        }
+    )
+}
+
+@Composable
+fun CoinShopScreenContent(
+    uiState: GameUiState,
+    products: List<StoreProduct>,
+    onBack: () -> Unit,
+    onPurchase: (StoreProduct) -> Unit
+) {
     val soundManager = LocalSoundManager.current
 
     PaxlScreenScaffold {
@@ -81,13 +106,27 @@ fun CoinShopScreen(viewModel: GameViewModel, onBack: () -> Unit) {
                         color = NeonCyan,
                         onClick = {
                             soundManager?.playClick()
-                            (context as? Activity)?.let { activity ->
-                                viewModel.purchaseCoins(activity, product)
-                            }
+                            onPurchase(product)
                         }
                     )
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun CoinShopScreenPreview() {
+    PaxlTheme {
+        CoinShopScreenContent(
+            uiState = GameUiState(coins = 500),
+            products = listOf(
+                StoreProduct("1", "100 COINS", "0.99$"),
+                StoreProduct("2", "500 COINS", "3.99$")
+            ),
+            onBack = {},
+            onPurchase = {}
+        )
     }
 }

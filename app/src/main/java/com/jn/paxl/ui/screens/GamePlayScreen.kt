@@ -42,6 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jn.paxl.model.Block
+import com.jn.paxl.model.Coordinate
 import com.jn.paxl.ui.LocalSoundManager
 import com.jn.paxl.ui.components.BlockItem
 import com.jn.paxl.ui.components.GameGrid
@@ -54,6 +55,11 @@ import com.jn.paxl.viewmodel.GameViewModel
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 
+import androidx.compose.ui.tooling.preview.Preview
+import com.jn.paxl.model.GameUiState
+import com.jn.paxl.model.GridState
+import com.jn.paxl.ui.theme.PaxlTheme
+
 @Composable
 fun GamePlayScreen(
     viewModel: GameViewModel,
@@ -61,6 +67,26 @@ fun GamePlayScreen(
     onGameOver: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    
+    GamePlayScreenContent(
+        uiState = uiState,
+        onPauseClick = onPauseClick,
+        onGameOver = onGameOver,
+        onReshuffle = { viewModel.reshuffleBlocks() },
+        onUndo = { viewModel.undoMove() },
+        onBlockPlaced = { block, pos -> viewModel.onBlockPlaced(block, pos) }
+    )
+}
+
+@Composable
+fun GamePlayScreenContent(
+    uiState: GameUiState,
+    onPauseClick: () -> Unit,
+    onGameOver: () -> Unit,
+    onReshuffle: () -> Unit,
+    onUndo: () -> Unit,
+    onBlockPlaced: (Block, Coordinate) -> Unit
+) {
     val soundManager = LocalSoundManager.current
     var draggedBlock by remember { mutableStateOf<Block?>(null) }
     var draggedOffset by remember { mutableStateOf<Offset?>(null) }
@@ -199,7 +225,7 @@ fun GamePlayScreen(
                     cost = "25",
                     onClick = {
                         soundManager?.playClick()
-                        viewModel.reshuffleBlocks()
+                        onReshuffle()
                     }
                 )
                 PowerActionButton(
@@ -207,7 +233,7 @@ fun GamePlayScreen(
                     cost = "10",
                     onClick = {
                         soundManager?.playClick()
-                        viewModel.undoMove()
+                        onUndo()
                     }
                 )
             }
@@ -244,7 +270,7 @@ fun GamePlayScreen(
                                 },
                                 onPlace = { pos ->
                                     soundManager?.playPlace()
-                                    viewModel.onBlockPlaced(block, pos)
+                                    onBlockPlaced(block, pos)
                                 }
                             )
                         }
@@ -252,6 +278,26 @@ fun GamePlayScreen(
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun GamePlayScreenPreview() {
+    PaxlTheme {
+        GamePlayScreenContent(
+            uiState = GameUiState(
+                grid = GridState(size = 10),
+                coins = 100,
+                score = 500,
+                currentLevel = 1
+            ),
+            onPauseClick = {},
+            onGameOver = {},
+            onReshuffle = {},
+            onUndo = {},
+            onBlockPlaced = { _, _ -> }
+        )
     }
 }
 

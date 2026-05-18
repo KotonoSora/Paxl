@@ -27,9 +27,23 @@ import com.jn.paxl.ui.theme.NeonGreen
 import com.jn.paxl.ui.theme.NeonPink
 import com.jn.paxl.viewmodel.GameViewModel
 
+import androidx.compose.ui.tooling.preview.Preview
+import com.jn.paxl.model.GameUiState
+import com.jn.paxl.ui.theme.PaxlTheme
+
 @Composable
 fun ResultScreen(viewModel: GameViewModel, onPlayAgain: () -> Unit, onHome: () -> Unit) {
     val uiState by viewModel.uiState.collectAsState()
+    
+    ResultScreenContent(
+        uiState = uiState,
+        onPlayAgain = onPlayAgain,
+        onHome = onHome
+    )
+}
+
+@Composable
+fun ResultScreenContent(uiState: GameUiState, onPlayAgain: () -> Unit, onHome: () -> Unit) {
     val soundManager = LocalSoundManager.current
 
     LaunchedEffect(Unit) {
@@ -72,5 +86,17 @@ fun ResultScreen(viewModel: GameViewModel, onPlayAgain: () -> Unit, onHome: () -
                 }
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ResultScreenPreview() {
+    PaxlTheme {
+        ResultScreenContent(
+            uiState = GameUiState(score = 1234),
+            onPlayAgain = {},
+            onHome = {}
+        )
     }
 }

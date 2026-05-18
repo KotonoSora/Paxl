@@ -21,6 +21,9 @@ import com.jn.paxl.ui.theme.NeonCyan
 import com.jn.paxl.ui.theme.NeonPink
 import com.jn.paxl.ui.theme.SurfaceDark
 
+import androidx.compose.ui.tooling.preview.Preview
+import com.jn.paxl.ui.theme.PaxlTheme
+
 @Composable
 fun LevelSelectScreen(
     onLevelSelected: (Int) -> Unit,
@@ -47,6 +50,14 @@ fun LevelSelectScreen(
                 LevelTile(level = level, onClick = { onLevelSelected(level) })
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun LevelSelectScreenPreview() {
+    PaxlTheme {
+        LevelSelectScreen(onLevelSelected = {}, onBack = {})
     }
 }
 

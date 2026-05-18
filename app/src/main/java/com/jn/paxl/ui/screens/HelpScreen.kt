@@ -18,6 +18,9 @@ import com.jn.paxl.ui.theme.NeonGreen
 import com.jn.paxl.ui.theme.NeonPink
 import com.jn.paxl.ui.theme.NeonYellow
 
+import androidx.compose.ui.tooling.preview.Preview
+import com.jn.paxl.ui.theme.PaxlTheme
+
 @Composable
 fun HelpScreen(onBack: () -> Unit) {
     PaxlScreenScaffold(scrollable = true) {
@@ -55,6 +58,14 @@ fun HelpScreen(onBack: () -> Unit) {
         )
 
         Spacer(Modifier.height(32.dp))
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun HelpScreenPreview() {
+    PaxlTheme {
+        HelpScreen(onBack = {})
     }
 }
 
