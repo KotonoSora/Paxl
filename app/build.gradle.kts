@@ -8,11 +8,11 @@ plugins {
 }
 
 configure<ApplicationExtension> {
-    namespace = "com.kotonosora.paxl"
+    namespace = "com.jn.paxl"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.kotonosora.paxl"
+        applicationId = "com.jn.paxl"
         minSdk = 24
         targetSdk = 36
         versionCode = 1

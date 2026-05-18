@@ -56,7 +56,7 @@
 -dontwarn androidx.camera.**
 
 # Game Models (Keep for persistence/serialization)
--keep class com.kotonosora.paxl.model.** { *; }
+-keep class com.jn.paxl.model.** { *; }
 
 # Kotlin Coroutines
 -keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
