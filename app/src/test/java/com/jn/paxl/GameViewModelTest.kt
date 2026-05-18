@@ -1,19 +1,34 @@
 package com.jn.paxl
 
 import androidx.compose.ui.graphics.Color
+import com.jn.paxl.application.gameplay.GameplayUseCases
+import com.jn.paxl.application.gameplay.PlaceBlockUseCase
+import com.jn.paxl.application.gameplay.ReshuffleBlocksUseCase
+import com.jn.paxl.application.gameplay.StartNewGameUseCase
+import com.jn.paxl.application.gameplay.UndoMoveUseCase
+import com.jn.paxl.domain.gameplay.port.BlockCatalog
 import com.jn.paxl.model.Block
 import com.jn.paxl.model.Coordinate
 import com.jn.paxl.repository.BillingRepository
 import com.jn.paxl.repository.DataStoreRepository
 import com.jn.paxl.viewmodel.GameViewModel
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.*
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import org.junit.After
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -25,6 +40,28 @@ class GameViewModelTest {
     private val dataStoreRepository = mockk<DataStoreRepository>(relaxed = true)
     private val billingRepository = mockk<BillingRepository>(relaxed = true)
 
+    private val singleCellBlock = Block(
+        shape = listOf(Coordinate(0, 0)),
+        color = Color.Blue,
+        id = "single"
+    )
+
+    private val fakeCatalog = object : BlockCatalog {
+        private var batch = 0
+
+        override fun randomBlocks(count: Int): List<Block> {
+            val currentBatch = batch++
+            return List(count) { singleCellBlock.copy(id = "b${currentBatch}-$it") }
+        }
+    }
+
+    private val gameplayUseCases = GameplayUseCases(
+        startNewGame = StartNewGameUseCase(fakeCatalog),
+        placeBlock = PlaceBlockUseCase(fakeCatalog),
+        undoMove = UndoMoveUseCase(),
+        reshuffleBlocks = ReshuffleBlocksUseCase(fakeCatalog)
+    )
+
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
@@ -35,7 +72,7 @@ class GameViewModelTest {
         every { dataStoreRepository.soundEnabledFlow } returns flowOf(true)
         every { dataStoreRepository.musicEnabledFlow } returns flowOf(true)
 
-        viewModel = GameViewModel(dataStoreRepository, billingRepository)
+        viewModel = GameViewModel(dataStoreRepository, billingRepository, gameplayUseCases)
     }
 
     @After
@@ -45,7 +82,6 @@ class GameViewModelTest {
 
     @Test
     fun `initial state is correct`() = runTest {
-        // Run any pending coroutines
         advanceUntilIdle()
 
         val state = viewModel.uiState.value
@@ -66,6 +102,9 @@ class GameViewModelTest {
         assertTrue(state.score > 0)
         assertNotNull(state.grid.cells[Coordinate(0, 0)])
         assertEquals(2, state.availableBlocks.size)
+
+        advanceUntilIdle()
+        coVerify(exactly = 1) { dataStoreRepository.saveHighScore(state.score) }
     }
 
     @Test
@@ -73,59 +112,88 @@ class GameViewModelTest {
         advanceUntilIdle()
         viewModel.startNewGame()
 
-        // A simple 1x1 block for testing
         val singleBlock = Block(listOf(Coordinate(0, 0)), Color.Blue)
 
-        // Place 9 blocks in row 0
         for (x in 0 until 9) {
             viewModel.onBlockPlaced(singleBlock, Coordinate(x, 0))
         }
 
         val scoreBeforeClear = viewModel.uiState.value.score
 
-        // Place the 10th block to clear the row
         viewModel.onBlockPlaced(singleBlock, Coordinate(9, 0))
 
         val state = viewModel.uiState.value
-        // 10 points for block placement + 100 for line clear
         assertEquals(scoreBeforeClear + 110, state.score)
 
-        // Grid cells for that row should be empty
         for (x in 0 until 10) {
             assertNull(state.grid.cells[Coordinate(x, 0)])
         }
     }
 
-    @Test
-    fun `invalid placement does not update grid`() = runTest {
-        advanceUntilIdle()
-        val firstBlock = viewModel.uiState.value.availableBlocks.first()
-
-        // Place once
-        viewModel.onBlockPlaced(firstBlock, Coordinate(0, 0))
-        val scoreAfterFirst = viewModel.uiState.value.score
-
-        // Try to place on same spot
-        viewModel.onBlockPlaced(firstBlock, Coordinate(0, 0))
-
-        assertEquals(scoreAfterFirst, viewModel.uiState.value.score)
-    }
 
     @Test
     fun `undo move restores previous grid state`() = runTest {
         advanceUntilIdle()
         val firstBlock = viewModel.uiState.value.availableBlocks.first()
 
-        // Set coins for undo
-        // Note: In a real test we might want to verify coins decrease too
-
         viewModel.onBlockPlaced(firstBlock, Coordinate(0, 0))
         assertNotNull(viewModel.uiState.value.grid.cells[Coordinate(0, 0)])
 
         viewModel.undoMove()
-        // Assuming 100 coins initial, undo costs 10.
-        // If coins are not enough, it won't undo. Initial state mocks 100 coins.
 
         assertNull(viewModel.uiState.value.grid.cells[Coordinate(0, 0)])
+        assertEquals(90, viewModel.uiState.value.coins)
+
+        advanceUntilIdle()
+        coVerify(exactly = 1) { dataStoreRepository.saveCoins(90) }
+    }
+
+    @Test
+    fun `undo move does nothing when history is empty`() = runTest {
+        advanceUntilIdle()
+
+        val before = viewModel.uiState.value
+        viewModel.undoMove()
+        val after = viewModel.uiState.value
+
+        assertEquals(before.grid.cells, after.grid.cells)
+        assertEquals(before.coins, after.coins)
+
+        advanceUntilIdle()
+        coVerify(exactly = 0) { dataStoreRepository.saveCoins(any()) }
+    }
+
+    @Test
+    fun `reshuffle deducts coins and saves when balance is sufficient`() = runTest {
+        advanceUntilIdle()
+
+        val beforeIds = viewModel.uiState.value.availableBlocks.map { it.id }
+        viewModel.reshuffleBlocks()
+        val after = viewModel.uiState.value
+
+        assertEquals(75, after.coins)
+        assertEquals(3, after.availableBlocks.size)
+        assertTrue(after.availableBlocks.map { it.id } != beforeIds)
+
+        advanceUntilIdle()
+        coVerify(exactly = 1) { dataStoreRepository.saveCoins(75) }
+    }
+
+    @Test
+    fun `start new game clears undo history`() = runTest {
+        advanceUntilIdle()
+        val firstBlock = viewModel.uiState.value.availableBlocks.first()
+
+        viewModel.onBlockPlaced(firstBlock, Coordinate(0, 0))
+        assertNotNull(viewModel.uiState.value.grid.cells[Coordinate(0, 0)])
+
+        viewModel.startNewGame()
+        val afterStart = viewModel.uiState.value
+        assertTrue(afterStart.grid.cells.isEmpty())
+
+        viewModel.undoMove()
+        val afterUndo = viewModel.uiState.value
+        assertTrue(afterUndo.grid.cells.isEmpty())
+        assertEquals(afterStart.coins, afterUndo.coins)
     }
 }

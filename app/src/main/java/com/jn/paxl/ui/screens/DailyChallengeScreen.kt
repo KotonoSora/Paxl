@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -21,11 +22,9 @@ import com.jn.paxl.ui.components.PaxlBackHeader
 import com.jn.paxl.ui.components.PaxlScreenScaffold
 import com.jn.paxl.ui.theme.NeonGreen
 import com.jn.paxl.ui.theme.NeonYellow
+import com.jn.paxl.ui.theme.PaxlTheme
 import com.jn.paxl.ui.theme.SurfaceDark
 import com.jn.paxl.viewmodel.GameViewModel
-
-import androidx.compose.ui.tooling.preview.Preview
-import com.jn.paxl.ui.theme.PaxlTheme
 
 @Composable
 fun DailyChallengeScreen(

@@ -39,10 +39,13 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jn.paxl.model.Block
 import com.jn.paxl.model.Coordinate
+import com.jn.paxl.model.GameUiState
+import com.jn.paxl.model.GridState
 import com.jn.paxl.ui.LocalSoundManager
 import com.jn.paxl.ui.components.BlockItem
 import com.jn.paxl.ui.components.GameGrid
@@ -51,14 +54,10 @@ import com.jn.paxl.ui.theme.BackgroundDark
 import com.jn.paxl.ui.theme.NeonCyan
 import com.jn.paxl.ui.theme.NeonGreen
 import com.jn.paxl.ui.theme.NeonYellow
+import com.jn.paxl.ui.theme.PaxlTheme
 import com.jn.paxl.viewmodel.GameViewModel
 import kotlinx.coroutines.delay
 import kotlin.math.abs
-
-import androidx.compose.ui.tooling.preview.Preview
-import com.jn.paxl.model.GameUiState
-import com.jn.paxl.model.GridState
-import com.jn.paxl.ui.theme.PaxlTheme
 
 @Composable
 fun GamePlayScreen(
@@ -67,7 +66,7 @@ fun GamePlayScreen(
     onGameOver: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    
+
     GamePlayScreenContent(
         uiState = uiState,
         onPauseClick = onPauseClick,

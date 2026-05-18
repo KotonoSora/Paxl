@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.jn.paxl.ui.components.NeonButton
 import com.jn.paxl.ui.components.NeonTitle
@@ -23,8 +24,6 @@ import com.jn.paxl.ui.theme.BackgroundDark
 import com.jn.paxl.ui.theme.NeonCyan
 import com.jn.paxl.ui.theme.NeonGreen
 import com.jn.paxl.ui.theme.NeonYellow
-
-import androidx.compose.ui.tooling.preview.Preview
 import com.jn.paxl.ui.theme.PaxlTheme
 
 @Composable

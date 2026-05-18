@@ -138,7 +138,8 @@ fun GameGrid(
                 val gridX = floor(relativeX / cellSizePx).toInt()
                 val gridY = floor(relativeY / cellSizePx).toInt()
 
-                val canPlace = GameEngine.canPlaceBlock(draggedBlock, Coordinate(gridX, gridY), gridState)
+                val canPlace =
+                    GameEngine.canPlaceBlock(draggedBlock, Coordinate(gridX, gridY), gridState)
 
                 if (canPlace) {
                     draggedBlock.shape.forEach { offset ->

@@ -3,9 +3,8 @@ package com.jn.paxl.ui
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.SoundPool
-import com.jn.paxl.R
-
 import androidx.compose.runtime.staticCompositionLocalOf
+import com.jn.paxl.R
 
 class SoundManager(context: Context) {
     private val soundPool: SoundPool
