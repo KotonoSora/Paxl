@@ -27,13 +27,13 @@ import androidx.compose.ui.unit.dp
 import com.jn.paxl.model.GameUiState
 import com.jn.paxl.repository.StoreProduct
 import com.jn.paxl.ui.LocalSoundManager
-import com.jn.paxl.ui.components.NeonButton
-import com.jn.paxl.ui.components.NeonText
 import com.jn.paxl.ui.components.GameBackHeader
 import com.jn.paxl.ui.components.GameScreenScaffold
+import com.jn.paxl.ui.components.NeonButton
+import com.jn.paxl.ui.components.NeonText
+import com.jn.paxl.ui.theme.GameTheme
 import com.jn.paxl.ui.theme.NeonCyan
 import com.jn.paxl.ui.theme.NeonYellow
-import com.jn.paxl.ui.theme.GameTheme
 import com.jn.paxl.viewmodel.GameViewModel
 
 @Composable

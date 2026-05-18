@@ -20,9 +20,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.jn.paxl.ui.components.GameBackHeader
 import com.jn.paxl.ui.components.GameScreenScaffold
+import com.jn.paxl.ui.theme.GameTheme
 import com.jn.paxl.ui.theme.NeonBlue
 import com.jn.paxl.ui.theme.NeonCyan
-import com.jn.paxl.ui.theme.GameTheme
 import com.jn.paxl.ui.theme.SurfaceDark
 
 @Composable

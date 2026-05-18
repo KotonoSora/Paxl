@@ -23,7 +23,8 @@ class GameplayUseCasesTest {
     )
 
     private val fakeCatalog = object : BlockCatalog {
-        override fun randomBlocks(count: Int): List<Block> = List(count) { singleCellBlock.copy(id = "b$it") }
+        override fun randomBlocks(count: Int): List<Block> =
+            List(count) { singleCellBlock.copy(id = "b$it") }
     }
 
     @Test

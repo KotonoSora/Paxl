@@ -24,10 +24,10 @@ import com.jn.paxl.ui.components.NeonButton
 import com.jn.paxl.ui.components.NeonText
 import com.jn.paxl.ui.components.NeonTitle
 import com.jn.paxl.ui.theme.BackgroundDark
+import com.jn.paxl.ui.theme.GameTheme
 import com.jn.paxl.ui.theme.NeonCyan
 import com.jn.paxl.ui.theme.NeonGreen
 import com.jn.paxl.ui.theme.NeonPink
-import com.jn.paxl.ui.theme.GameTheme
 import com.jn.paxl.viewmodel.GameViewModel
 
 @Composable

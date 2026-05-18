@@ -51,10 +51,10 @@ import com.jn.paxl.ui.components.BlockItem
 import com.jn.paxl.ui.components.GameGrid
 import com.jn.paxl.ui.components.RetroFont
 import com.jn.paxl.ui.theme.BackgroundDark
+import com.jn.paxl.ui.theme.GameTheme
 import com.jn.paxl.ui.theme.NeonCyan
 import com.jn.paxl.ui.theme.NeonGreen
 import com.jn.paxl.ui.theme.NeonYellow
-import com.jn.paxl.ui.theme.GameTheme
 import com.jn.paxl.viewmodel.GameViewModel
 import kotlinx.coroutines.delay
 import kotlin.math.abs

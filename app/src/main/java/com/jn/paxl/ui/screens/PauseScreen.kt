@@ -17,11 +17,11 @@ import androidx.compose.ui.unit.dp
 import com.jn.paxl.ui.components.NeonButton
 import com.jn.paxl.ui.components.NeonTitle
 import com.jn.paxl.ui.theme.BackgroundDark
+import com.jn.paxl.ui.theme.GameTheme
 import com.jn.paxl.ui.theme.NeonCyan
 import com.jn.paxl.ui.theme.NeonGreen
 import com.jn.paxl.ui.theme.NeonPink
 import com.jn.paxl.ui.theme.NeonYellow
-import com.jn.paxl.ui.theme.GameTheme
 
 @Composable
 fun PauseScreen(onResume: () -> Unit, onRestart: () -> Unit, onQuit: () -> Unit) {

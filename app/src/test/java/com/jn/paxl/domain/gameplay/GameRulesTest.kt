@@ -53,7 +53,8 @@ class GameRulesTest {
             id = "h2"
         )
 
-        val isGameOver = GameRules.checkGameOver(cells = grid, availableBlocks = listOf(oneByTwo), size = 2)
+        val isGameOver =
+            GameRules.checkGameOver(cells = grid, availableBlocks = listOf(oneByTwo), size = 2)
 
         assertTrue(isGameOver)
     }

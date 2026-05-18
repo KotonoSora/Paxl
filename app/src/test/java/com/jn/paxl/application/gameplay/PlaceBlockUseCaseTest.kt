@@ -101,7 +101,11 @@ class PlaceBlockUseCaseTest {
 
         val state = GameUiState(
             grid = GridState(cells = occupied, size = 10),
-            availableBlocks = listOf(oneCell, oneCell.copy(id = "other"), oneCell.copy(id = "other2")),
+            availableBlocks = listOf(
+                oneCell,
+                oneCell.copy(id = "other"),
+                oneCell.copy(id = "other2")
+            ),
             score = 0
         )
 
