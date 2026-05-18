@@ -15,7 +15,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jn.paxl.ui.GameNavigation
 import com.jn.paxl.ui.LocalSoundManager
 import com.jn.paxl.ui.SoundManager
-import com.jn.paxl.ui.theme.PaxlTheme
+import com.jn.paxl.ui.theme.GameTheme
 import com.jn.paxl.viewmodel.GameViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -40,7 +40,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            PaxlTheme {
+            GameTheme {
                 CompositionLocalProvider(LocalSoundManager provides soundManager) {
                     GameNavigation(viewModel = viewModel)
                 }

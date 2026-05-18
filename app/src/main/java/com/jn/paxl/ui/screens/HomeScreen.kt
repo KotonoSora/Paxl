@@ -10,9 +10,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
@@ -32,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jn.paxl.model.GameUiState
 import com.jn.paxl.ui.LocalSoundManager
@@ -39,12 +39,12 @@ import com.jn.paxl.ui.components.NeonButton
 import com.jn.paxl.ui.components.NeonText
 import com.jn.paxl.ui.components.NeonTitle
 import com.jn.paxl.ui.theme.BackgroundDark
+import com.jn.paxl.ui.theme.GameTheme
 import com.jn.paxl.ui.theme.NeonBlue
 import com.jn.paxl.ui.theme.NeonCyan
 import com.jn.paxl.ui.theme.NeonGreen
 import com.jn.paxl.ui.theme.NeonPink
 import com.jn.paxl.ui.theme.NeonYellow
-import com.jn.paxl.ui.theme.PaxlTheme
 import com.jn.paxl.viewmodel.GameViewModel
 
 @Composable
@@ -85,40 +85,44 @@ fun HomeScreenContent(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .safeContentPadding()
             .background(BackgroundDark)
     ) {
-        // Top section for coins and shop
         Row(
             modifier = Modifier
-                .statusBarsPadding()
+                .align(Alignment.TopEnd)
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 16.dp),
-            horizontalArrangement = Arrangement.End,
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = 12.dp, vertical = 2.dp)
+                .zIndex(1f),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.End
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     Icons.Default.MonetizationOn,
-                    contentDescription = "Coins",
+                    contentDescription = "Tokens",
                     tint = NeonYellow,
                     modifier = Modifier.size(24.dp)
                 )
+
                 Spacer(Modifier.width(12.dp))
+
                 NeonText(
-                    text = "${uiState.coins}",
+                    text = "${uiState.tokens}",
                     color = Color.White,
-                    fontSize = 24
+                    fontSize = 24,
                 )
             }
+
             Spacer(Modifier.width(24.dp))
+
             IconButton(
                 onClick = {
                     soundManager?.playClick()
                     onShopClick()
-                },
-                modifier = Modifier.size(32.dp)
+                }, modifier = Modifier.size(32.dp)
             ) {
                 Icon(
                     Icons.Default.ShoppingCart,
@@ -132,23 +136,22 @@ fun HomeScreenContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .safeDrawingPadding()
-                .padding(horizontal = 32.dp),
+                .safeContentPadding(),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy((-8).dp)
-            ) {
-                NeonTitle("PAXL", color = NeonCyan, fontSize = 64)
-                NeonTitle("BLAST", color = NeonPink, fontSize = 64)
-            }
+            NeonTitle(
+                "PAXL",
+                color = NeonCyan,
+                fontSize = 48,
+            )
 
-            Spacer(Modifier.height(60.dp))
+            Spacer(modifier = Modifier.height(36.dp))
 
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 NeonButton(
@@ -198,7 +201,7 @@ fun HomeScreenContent(
                         soundManager?.playClick()
                         onSettingsClick()
                     },
-                    icon = Icons.Default.Settings
+                    icon = Icons.Default.Settings,
                 )
             }
         }
@@ -208,15 +211,14 @@ fun HomeScreenContent(
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
-    PaxlTheme {
+    GameTheme {
         HomeScreenContent(
-            uiState = GameUiState(coins = 100),
+            uiState = GameUiState(tokens = 100),
             onPlayClick = {},
             onSettingsClick = {},
             onShopClick = {},
             onDailyChallengeClick = {},
             onLeaderboardClick = {},
-            onHelpClick = {}
-        )
+            onHelpClick = {})
     }
 }

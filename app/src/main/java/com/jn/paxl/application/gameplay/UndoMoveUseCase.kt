@@ -8,12 +8,12 @@ class UndoMoveUseCase(private val undoCost: Int = 10) {
         currentState: GameUiState,
         history: MutableList<Map<Coordinate, androidx.compose.ui.graphics.Color?>>
     ): GameUiState {
-        if (history.isEmpty() || currentState.coins < undoCost) return currentState
+        if (history.isEmpty() || currentState.tokens < undoCost) return currentState
 
         val lastGrid = history.removeAt(history.lastIndex)
         return currentState.copy(
             grid = currentState.grid.copy(cells = lastGrid),
-            coins = currentState.coins - undoCost
+            tokens = currentState.tokens - undoCost
         )
     }
 }

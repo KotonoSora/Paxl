@@ -14,7 +14,7 @@ class UndoMoveUseCaseTest {
     @Test
     fun `undo returns same state when history is empty`() {
         val useCase = UndoMoveUseCase(undoCost = 10)
-        val state = GameUiState(coins = 100)
+        val state = GameUiState(tokens = 100)
 
         val result = useCase(state, mutableListOf())
 
@@ -22,10 +22,10 @@ class UndoMoveUseCaseTest {
     }
 
     @Test
-    fun `undo returns same state when coins are insufficient`() {
+    fun `undo returns same state when tokens are insufficient`() {
         val useCase = UndoMoveUseCase(undoCost = 10)
         val history = mutableListOf<Map<Coordinate, Color?>>(emptyMap())
-        val state = GameUiState(coins = 5)
+        val state = GameUiState(tokens = 5)
 
         val result = useCase(state, history)
 
@@ -41,12 +41,12 @@ class UndoMoveUseCaseTest {
         val history = mutableListOf(oldest, newest)
         val state = GameUiState(
             grid = GridState(cells = mapOf(Coordinate(2, 2) to Color.Blue), size = 10),
-            coins = 50
+            tokens = 50
         )
 
         val result = useCase(state, history)
 
-        assertEquals(40, result.coins)
+        assertEquals(40, result.tokens)
         assertEquals(newest, result.grid.cells)
         assertEquals(1, history.size)
         assertTrue(history.contains(oldest))

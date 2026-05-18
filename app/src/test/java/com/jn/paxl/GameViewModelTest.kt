@@ -142,7 +142,7 @@ class GameViewModelTest {
         viewModel.undoMove()
 
         assertNull(viewModel.uiState.value.grid.cells[Coordinate(0, 0)])
-        assertEquals(90, viewModel.uiState.value.coins)
+        assertEquals(90, viewModel.uiState.value.tokens)
 
         advanceUntilIdle()
         coVerify(exactly = 1) { dataStoreRepository.saveCoins(90) }
@@ -157,21 +157,21 @@ class GameViewModelTest {
         val after = viewModel.uiState.value
 
         assertEquals(before.grid.cells, after.grid.cells)
-        assertEquals(before.coins, after.coins)
+        assertEquals(before.tokens, after.tokens)
 
         advanceUntilIdle()
         coVerify(exactly = 0) { dataStoreRepository.saveCoins(any()) }
     }
 
     @Test
-    fun `reshuffle deducts coins and saves when balance is sufficient`() = runTest {
+    fun `reshuffle deducts tokens and saves when balance is sufficient`() = runTest {
         advanceUntilIdle()
 
         val beforeIds = viewModel.uiState.value.availableBlocks.map { it.id }
         viewModel.reshuffleBlocks()
         val after = viewModel.uiState.value
 
-        assertEquals(75, after.coins)
+        assertEquals(75, after.tokens)
         assertEquals(3, after.availableBlocks.size)
         assertTrue(after.availableBlocks.map { it.id } != beforeIds)
 
@@ -194,6 +194,6 @@ class GameViewModelTest {
         viewModel.undoMove()
         val afterUndo = viewModel.uiState.value
         assertTrue(afterUndo.grid.cells.isEmpty())
-        assertEquals(afterStart.coins, afterUndo.coins)
+        assertEquals(afterStart.tokens, afterUndo.tokens)
     }
 }

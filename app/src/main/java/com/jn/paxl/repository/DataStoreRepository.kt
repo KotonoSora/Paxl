@@ -13,13 +13,13 @@ import kotlinx.coroutines.flow.map
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
 class DataStoreRepository(private val context: Context) {
-    private val COINS_KEY = intPreferencesKey("coins")
+    private val COINS_KEY = intPreferencesKey("tokens")
     private val HIGH_SCORE_KEY = intPreferencesKey("high_score")
     private val SOUND_ENABLED_KEY = booleanPreferencesKey("sound_enabled")
     private val MUSIC_ENABLED_KEY = booleanPreferencesKey("music_enabled")
 
     val coinsFlow: Flow<Int> = context.dataStore.data.map { preferences ->
-        preferences[COINS_KEY] ?: 100 // Starting coins
+        preferences[COINS_KEY] ?: 100 // Starting tokens
     }
 
     val highScoreFlow: Flow<Int> = context.dataStore.data.map { preferences ->
@@ -34,9 +34,9 @@ class DataStoreRepository(private val context: Context) {
         preferences[MUSIC_ENABLED_KEY] ?: true
     }
 
-    suspend fun saveCoins(coins: Int) {
+    suspend fun saveCoins(tokens: Int) {
         context.dataStore.edit { preferences ->
-            preferences[COINS_KEY] = coins
+            preferences[COINS_KEY] = tokens
         }
     }
 

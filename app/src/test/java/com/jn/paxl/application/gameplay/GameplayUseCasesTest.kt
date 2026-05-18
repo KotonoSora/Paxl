@@ -55,17 +55,17 @@ class GameplayUseCasesTest {
     }
 
     @Test
-    fun `undo use case restores previous grid and deducts coins`() {
+    fun `undo use case restores previous grid and deducts tokens`() {
         val undoUseCase = UndoMoveUseCase(undoCost = 10)
         val history = mutableListOf<Map<Coordinate, Color?>>(emptyMap())
         val state = GameUiState(
             grid = GridState(cells = mapOf(Coordinate(0, 0) to Color.Blue), size = 10),
-            coins = 100
+            tokens = 100
         )
 
         val updated = undoUseCase(state, history)
 
-        assertEquals(90, updated.coins)
+        assertEquals(90, updated.tokens)
         assertNull(updated.grid.cells[Coordinate(0, 0)])
         assertTrue(history.isEmpty())
     }

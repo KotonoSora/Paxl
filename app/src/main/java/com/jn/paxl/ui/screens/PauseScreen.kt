@@ -21,7 +21,7 @@ import com.jn.paxl.ui.theme.NeonCyan
 import com.jn.paxl.ui.theme.NeonGreen
 import com.jn.paxl.ui.theme.NeonPink
 import com.jn.paxl.ui.theme.NeonYellow
-import com.jn.paxl.ui.theme.PaxlTheme
+import com.jn.paxl.ui.theme.GameTheme
 
 @Composable
 fun PauseScreen(onResume: () -> Unit, onRestart: () -> Unit, onQuit: () -> Unit) {
@@ -53,7 +53,7 @@ fun PauseScreen(onResume: () -> Unit, onRestart: () -> Unit, onQuit: () -> Unit)
 @Preview(showBackground = true)
 @Composable
 fun PauseScreenPreview() {
-    PaxlTheme {
+    GameTheme {
         PauseScreen(onResume = {}, onRestart = {}, onQuit = {})
     }
 }

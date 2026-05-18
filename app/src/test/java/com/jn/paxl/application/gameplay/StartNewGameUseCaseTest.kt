@@ -29,7 +29,7 @@ class StartNewGameUseCaseTest {
         val useCase = StartNewGameUseCase(fakeCatalog)
         val previous = GameUiState(
             score = 250,
-            coins = 420,
+            tokens = 420,
             highScore = 999,
             soundEnabled = false,
             musicEnabled = false,
@@ -39,7 +39,7 @@ class StartNewGameUseCaseTest {
         val result = useCase(previousState = previous, level = 3)
 
         assertEquals(0, result.score)
-        assertEquals(420, result.coins)
+        assertEquals(420, result.tokens)
         assertEquals(999, result.highScore)
         assertFalse(result.soundEnabled)
         assertFalse(result.musicEnabled)

@@ -43,10 +43,10 @@ class GameViewModel @Inject constructor(
                 repository.highScoreFlow,
                 repository.soundEnabledFlow,
                 repository.musicEnabledFlow
-            ) { coins, highScore, sound, music ->
+            ) { tokens, highScore, sound, music ->
                 _uiState.update {
                     it.copy(
-                        coins = coins,
+                        tokens = tokens,
                         highScore = highScore,
                         soundEnabled = sound,
                         musicEnabled = music
@@ -77,17 +77,17 @@ class GameViewModel @Inject constructor(
 
     fun undoMove() {
         val updatedState = gameplayUseCases.undoMove(_uiState.value, gridHistory)
-        if (updatedState.coins != _uiState.value.coins) {
+        if (updatedState.tokens != _uiState.value.tokens) {
             _uiState.value = updatedState
-            viewModelScope.launch { repository.saveCoins(updatedState.coins) }
+            viewModelScope.launch { repository.saveCoins(updatedState.tokens) }
         }
     }
 
     fun reshuffleBlocks() {
         val updatedState = gameplayUseCases.reshuffleBlocks(_uiState.value)
-        if (updatedState.coins != _uiState.value.coins) {
+        if (updatedState.tokens != _uiState.value.tokens) {
             _uiState.value = updatedState
-            viewModelScope.launch { repository.saveCoins(updatedState.coins) }
+            viewModelScope.launch { repository.saveCoins(updatedState.tokens) }
         }
     }
 

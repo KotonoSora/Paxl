@@ -27,7 +27,7 @@ import com.jn.paxl.ui.theme.BackgroundDark
 import com.jn.paxl.ui.theme.NeonCyan
 import com.jn.paxl.ui.theme.NeonGreen
 import com.jn.paxl.ui.theme.NeonPink
-import com.jn.paxl.ui.theme.PaxlTheme
+import com.jn.paxl.ui.theme.GameTheme
 import com.jn.paxl.viewmodel.GameViewModel
 
 @Composable
@@ -91,7 +91,7 @@ fun ResultScreenContent(uiState: GameUiState, onPlayAgain: () -> Unit, onHome: (
 @Preview(showBackground = true)
 @Composable
 fun ResultScreenPreview() {
-    PaxlTheme {
+    GameTheme {
         ResultScreenContent(
             uiState = GameUiState(score = 1234),
             onPlayAgain = {},

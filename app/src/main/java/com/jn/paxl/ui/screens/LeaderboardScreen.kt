@@ -18,11 +18,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.jn.paxl.ui.components.PaxlBackHeader
-import com.jn.paxl.ui.components.PaxlScreenScaffold
+import com.jn.paxl.ui.components.GameBackHeader
+import com.jn.paxl.ui.components.GameScreenScaffold
 import com.jn.paxl.ui.theme.NeonBlue
 import com.jn.paxl.ui.theme.NeonCyan
-import com.jn.paxl.ui.theme.PaxlTheme
+import com.jn.paxl.ui.theme.GameTheme
 import com.jn.paxl.ui.theme.SurfaceDark
 
 @Composable
@@ -35,8 +35,8 @@ fun LeaderboardScreen(onBack: () -> Unit) {
         "StarDust" to 8200
     )
 
-    PaxlScreenScaffold {
-        PaxlBackHeader(
+    GameScreenScaffold {
+        GameBackHeader(
             title = "TOP SCORES",
             titleColor = NeonBlue,
             titleFontSize = 36,
@@ -59,7 +59,7 @@ fun LeaderboardScreen(onBack: () -> Unit) {
 @Preview(showBackground = true)
 @Composable
 fun LeaderboardScreenPreview() {
-    PaxlTheme {
+    GameTheme {
         LeaderboardScreen(onBack = {})
     }
 }

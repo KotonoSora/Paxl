@@ -24,7 +24,7 @@ class PaxlAppInstrumentedTest {
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
         val applicationClass = appContext.applicationInfo.className
 
-        assertEquals("com.jn.paxl.PaxlApplication", applicationClass)
+        assertEquals("com.jn.paxl.GameApplication", applicationClass)
     }
 
     @Test

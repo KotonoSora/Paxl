@@ -18,40 +18,32 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jn.paxl.ui.components.NeonButton
-import com.jn.paxl.ui.components.PaxlBackHeader
-import com.jn.paxl.ui.components.PaxlScreenScaffold
+import com.jn.paxl.ui.components.GameBackHeader
+import com.jn.paxl.ui.components.GameScreenScaffold
+import com.jn.paxl.ui.theme.GameTheme
 import com.jn.paxl.ui.theme.NeonGreen
 import com.jn.paxl.ui.theme.NeonYellow
-import com.jn.paxl.ui.theme.PaxlTheme
 import com.jn.paxl.ui.theme.SurfaceDark
 import com.jn.paxl.viewmodel.GameViewModel
 
 @Composable
 fun DailyChallengeScreen(
-    viewModel: GameViewModel = viewModel(),
-    onBack: () -> Unit,
-    onStartChallenge: () -> Unit = {}
+    viewModel: GameViewModel = viewModel(), onBack: () -> Unit, onStartChallenge: () -> Unit = {}
 ) {
     DailyChallengeScreenContent(
-        onBack = onBack,
-        onStartChallenge = {
+        onBack = onBack, onStartChallenge = {
             viewModel.startNewGame()
             onStartChallenge()
-        }
-    )
+        })
 }
 
 @Composable
 fun DailyChallengeScreenContent(
-    onBack: () -> Unit,
-    onStartChallenge: () -> Unit = {}
+    onBack: () -> Unit, onStartChallenge: () -> Unit = {}
 ) {
-    PaxlScreenScaffold {
-        PaxlBackHeader(
-            title = "DAILY",
-            titleColor = NeonYellow,
-            titleFontSize = 40,
-            onBack = onBack
+    GameScreenScaffold {
+        GameBackHeader(
+            title = "DAILY", titleColor = NeonYellow, titleFontSize = 40, onBack = onBack
         )
 
         Spacer(Modifier.height(48.dp))
@@ -61,8 +53,7 @@ fun DailyChallengeScreenContent(
             colors = CardDefaults.cardColors(containerColor = SurfaceDark),
             shape = RoundedCornerShape(16.dp),
             border = androidx.compose.foundation.BorderStroke(
-                1.dp,
-                NeonYellow.copy(alpha = 0.5f)
+                1.dp, NeonYellow.copy(alpha = 0.5f)
             )
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
@@ -74,7 +65,7 @@ fun DailyChallengeScreenContent(
                 )
                 Spacer(Modifier.height(16.dp))
                 Text(
-                    "Score 5000 points in a single session to win 50 coins bonus!",
+                    "Score 5000 points in a single session to win 50 tokens bonus!",
                     color = Color.White,
                     fontSize = 16.sp
                 )
@@ -84,9 +75,7 @@ fun DailyChallengeScreenContent(
         Spacer(Modifier.height(32.dp))
 
         NeonButton(
-            text = "START CHALLENGE",
-            color = NeonGreen,
-            onClick = onStartChallenge
+            text = "START CHALLENGE", color = NeonGreen, onClick = onStartChallenge
         )
     }
 }
@@ -94,7 +83,7 @@ fun DailyChallengeScreenContent(
 @Preview(showBackground = true)
 @Composable
 fun DailyChallengeScreenPreview() {
-    PaxlTheme {
+    GameTheme {
         DailyChallengeScreenContent(onBack = {})
     }
 }

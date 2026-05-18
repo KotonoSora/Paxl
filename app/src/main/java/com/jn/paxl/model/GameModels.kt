@@ -21,7 +21,7 @@ data class GameUiState(
     val availableBlocks: List<Block> = emptyList(),
     val currentLevel: Int = 1,
     val score: Int = 0,
-    val coins: Int = 0,
+    val tokens: Int = 0,
     val isGameOver: Boolean = false,
     val highScore: Int = 0,
     val soundEnabled: Boolean = true,

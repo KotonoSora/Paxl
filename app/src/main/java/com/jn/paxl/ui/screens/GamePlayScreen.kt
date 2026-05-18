@@ -54,7 +54,7 @@ import com.jn.paxl.ui.theme.BackgroundDark
 import com.jn.paxl.ui.theme.NeonCyan
 import com.jn.paxl.ui.theme.NeonGreen
 import com.jn.paxl.ui.theme.NeonYellow
-import com.jn.paxl.ui.theme.PaxlTheme
+import com.jn.paxl.ui.theme.GameTheme
 import com.jn.paxl.viewmodel.GameViewModel
 import kotlinx.coroutines.delay
 import kotlin.math.abs
@@ -122,7 +122,6 @@ fun GamePlayScreenContent(
                 .fillMaxSize()
                 .safeDrawingPadding()
         ) {
-            // Header: Level, Score and Coins
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -150,13 +149,13 @@ fun GamePlayScreenContent(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         Icons.Default.MonetizationOn,
-                        contentDescription = "Coins",
+                        contentDescription = "Tokens",
                         tint = NeonYellow,
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(Modifier.width(4.dp))
                     Text(
-                        "${uiState.coins}",
+                        "${uiState.tokens}",
                         color = NeonYellow,
                         fontFamily = RetroFont,
                         fontSize = 20.sp,
@@ -283,11 +282,11 @@ fun GamePlayScreenContent(
 @Preview(showBackground = true)
 @Composable
 fun GamePlayScreenPreview() {
-    PaxlTheme {
+    GameTheme {
         GamePlayScreenContent(
             uiState = GameUiState(
                 grid = GridState(size = 10),
-                coins = 100,
+                tokens = 100,
                 score = 500,
                 currentLevel = 1
             ),

@@ -29,11 +29,11 @@ import com.jn.paxl.repository.StoreProduct
 import com.jn.paxl.ui.LocalSoundManager
 import com.jn.paxl.ui.components.NeonButton
 import com.jn.paxl.ui.components.NeonText
-import com.jn.paxl.ui.components.PaxlBackHeader
-import com.jn.paxl.ui.components.PaxlScreenScaffold
+import com.jn.paxl.ui.components.GameBackHeader
+import com.jn.paxl.ui.components.GameScreenScaffold
 import com.jn.paxl.ui.theme.NeonCyan
 import com.jn.paxl.ui.theme.NeonYellow
-import com.jn.paxl.ui.theme.PaxlTheme
+import com.jn.paxl.ui.theme.GameTheme
 import com.jn.paxl.viewmodel.GameViewModel
 
 @Composable
@@ -63,8 +63,8 @@ fun CoinShopScreenContent(
 ) {
     val soundManager = LocalSoundManager.current
 
-    PaxlScreenScaffold {
-        PaxlBackHeader(
+    GameScreenScaffold {
+        GameBackHeader(
             title = "SHOP",
             titleColor = NeonYellow,
             titleFontSize = 32,
@@ -82,7 +82,7 @@ fun CoinShopScreenContent(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(Modifier.width(8.dp))
-                    NeonText("${uiState.coins}", color = NeonYellow, fontSize = 20)
+                    NeonText("${uiState.tokens}", color = NeonYellow, fontSize = 20)
                 }
             }
         )
@@ -117,9 +117,9 @@ fun CoinShopScreenContent(
 @Preview(showBackground = true)
 @Composable
 fun CoinShopScreenPreview() {
-    PaxlTheme {
+    GameTheme {
         CoinShopScreenContent(
-            uiState = GameUiState(coins = 500),
+            uiState = GameUiState(tokens = 500),
             products = listOf(
                 StoreProduct("1", "100 COINS", "0.99$"),
                 StoreProduct("2", "500 COINS", "3.99$")

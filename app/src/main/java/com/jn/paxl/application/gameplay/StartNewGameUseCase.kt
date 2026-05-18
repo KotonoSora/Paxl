@@ -14,7 +14,7 @@ class StartNewGameUseCase(
             availableBlocks = blockCatalog.randomBlocks(3),
             currentLevel = level,
             score = 0,
-            coins = previousState.coins,
+            tokens = previousState.tokens,
             highScore = previousState.highScore,
             soundEnabled = previousState.soundEnabled,
             musicEnabled = previousState.musicEnabled

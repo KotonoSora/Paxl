@@ -24,9 +24,9 @@ class ReshuffleBlocksUseCaseTest {
     }
 
     @Test
-    fun `reshuffle returns same state when coins are insufficient`() {
+    fun `reshuffle returns same state when tokens are insufficient`() {
         val useCase = ReshuffleBlocksUseCase(fakeCatalog, reshuffleCost = 25)
-        val state = GameUiState(coins = 20)
+        val state = GameUiState(tokens = 20)
 
         val result = useCase(state)
 
@@ -34,18 +34,18 @@ class ReshuffleBlocksUseCaseTest {
     }
 
     @Test
-    fun `reshuffle replaces blocks and deducts coins when enough balance`() {
+    fun `reshuffle replaces blocks and deducts tokens when enough balance`() {
         val useCase = ReshuffleBlocksUseCase(fakeCatalog, reshuffleCost = 25)
         val before = GameUiState(
             availableBlocks = listOf(
                 Block(shape = listOf(Coordinate(0, 0)), color = Color.Blue, id = "before")
             ),
-            coins = 100
+            tokens = 100
         )
 
         val result = useCase(before)
 
-        assertEquals(75, result.coins)
+        assertEquals(75, result.tokens)
         assertEquals(3, result.availableBlocks.size)
         assertNotEquals(before.availableBlocks.map { it.id }, result.availableBlocks.map { it.id })
     }
