@@ -5,7 +5,6 @@
 -keep class androidx.compose.runtime.Recomposer { *; }
 
 # Hilt
--keep class dagger.hilt.android.internal.managers.ViewComponentManager$Objer_ViewComponentBuilder { *; }
 -keep class * extends androidx.lifecycle.ViewModel
 
 # Room
@@ -16,18 +15,45 @@
 -keep class * { @androidx.room.TypeConverter *; }
 
 # DataStore
--keep class androidx.datastore.** { *; }
 
-# Moshi / Retrofit (used by dependencies)
+# Retrofit
+-keepattributes Signature, InnerClasses, AnnotationDefault
+-keepattributes RuntimeVisibleAnnotations, RuntimeVisibleParameterAnnotations
+-keepattributes RuntimeVisibleTypeAnnotations, AnnotationDefault
+-keepclassmembernames interface * {
+    @retrofit2.http.* <methods>;
+}
+-dontwarn retrofit2.**
+
+# Moshi
 -keep class com.squareup.moshi.** { *; }
 -keepclassmembers class * {
     @com.squareup.moshi.Json *;
 }
 -dontwarn com.squareup.moshi.**
 
+# OkHttp
+-keepattributes Signature
+-keepattributes *Annotation*
+-keep interface okhttp3.** { *; }
+-dontwarn okhttp3.**
+-dontwarn okio.**
+-dontwarn javax.annotation.**
+-dontwarn org.conscrypt.**
+
+# Coil
+-dontwarn coil.**
+
 # Google Play Billing
--keep class com.android.billingclient.api.** { *; }
 -dontwarn com.android.billingclient.api.**
+
+# Play Services Location
+-dontwarn com.google.android.gms.location.**
+
+# CameraX
+-keep class androidx.camera.lifecycle.** { *; }
+-keep class androidx.camera.view.** { *; }
+-dontwarn androidx.camera.**
 
 # Game Models (Keep for persistence/serialization)
 -keep class com.kotonosora.paxl.model.** { *; }

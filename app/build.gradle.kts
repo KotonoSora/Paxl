@@ -1,19 +1,15 @@
-import java.io.FileOutputStream
-import java.net.URI
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
+import com.android.build.api.dsl.ApplicationExtension
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.devtools.ksp)
     alias(libs.plugins.hilt)
 }
 
-android {
+configure<ApplicationExtension> {
     namespace = "com.kotonosora.paxl"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.kotonosora.paxl"
@@ -27,10 +23,11 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
@@ -38,82 +35,9 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
     buildFeatures {
         compose = true
-    }
-}
-
-tasks.register("generateAssets") {
-    doLast {
-        val fontDir = file("src/main/res/font")
-        fontDir.mkdirs()
-        val fontUrl =
-            URI("https://raw.githubusercontent.com/google/fonts/main/ofl/pressstart2p/PressStart2P-Regular.ttf").toURL()
-        println("Downloading font from $fontUrl...")
-        fontUrl.openStream().use { input ->
-            file("src/main/res/font/press_start_2p.ttf").outputStream().use { output ->
-                input.copyTo(output)
-            }
-        }
-
-        val rawDir = file("src/main/res/raw")
-        rawDir.mkdirs()
-
-        fun writeWav(name: String, freqFunc: (Double) -> Double, durationMs: Int) {
-            val sampleRate = 44100
-            val numSamples = (sampleRate * durationMs) / 1000
-            val wavFile = file("src/main/res/raw/$name.wav")
-            FileOutputStream(wavFile).use { out ->
-                val dataSize = numSamples * 2
-                val byteRate = sampleRate * 2
-
-                val header = ByteBuffer.allocate(44).apply {
-                    order(ByteOrder.LITTLE_ENDIAN)
-                    put("RIFF".toByteArray())
-                    putInt(36 + dataSize)
-                    put("WAVE".toByteArray())
-                    put("fmt ".toByteArray())
-                    putInt(16)
-                    putShort(1.toShort()) // PCM
-                    putShort(1.toShort()) // Channels
-                    putInt(sampleRate)
-                    putInt(byteRate)
-                    putShort(2.toShort()) // Block align
-                    putShort(16.toShort()) // Bits per sample
-                    put("data".toByteArray())
-                    putInt(dataSize)
-                }.array()
-
-                out.write(header)
-
-                val data = ByteBuffer.allocate(dataSize).apply {
-                    order(ByteOrder.LITTLE_ENDIAN)
-                    for (i in 0 until numSamples) {
-                        val t = i.toDouble() / sampleRate
-                        val freq = freqFunc(t)
-                        // Simple sine wave
-                        val value =
-                            (Math.sin(2.0 * Math.PI * freq * t) * 32767.0 * 0.5).toInt().toShort()
-                        putShort(value)
-                    }
-                }.array()
-
-                out.write(data)
-            }
-        }
-
-        println("Generating audio assets...")
-        writeWav("tap", { 800.0 }, 100)
-        writeWav("error", { 150.0 }, 300)
-        writeWav("win", { t -> 400.0 + 800.0 * t }, 600)
-        writeWav("lose", { t -> 400.0 - 400.0 * t }, 600)
-        writeWav("place", { 1000.0 }, 100)
-        writeWav("clear", { t -> 600.0 + 200.0 * t }, 400)
-        writeWav("click", { 1200.0 }, 50)
-        println("Assets generated successfully.")
+        buildConfig = true
     }
 }
 

@@ -73,23 +73,23 @@ class BillingRepository(
     private fun queryProducts() {
         if (isDebug) {
             val mockProducts = listOf(
-                StoreProduct("coins_100", "100 Coins", "$0.29"),
-                StoreProduct("coins_500", "500 Coins", "$0.49"),
-                StoreProduct("coins_1000", "1000 Coins", "$0.69"),
-                StoreProduct("coins_1500", "1500 Coins", "$0.99"),
-                StoreProduct("coins_2000", "2000 Coins", "$1.99"),
-                StoreProduct("coins_2500", "2500 Coins", "$3.99"),
-                StoreProduct("coins_3000", "3000 Coins", "$4.99"),
-                StoreProduct("coins_3500", "3500 Coins", "$7.99"),
-                StoreProduct("coins_4000", "4000 Coins", "$9.99")
+                StoreProduct("tokens_100", "100 Coins", "$0.59"),
+                StoreProduct("tokens_500", "500 Coins", "$0.79"),
+                StoreProduct("tokens_1000", "1000 Coins", "$0.99"),
+                StoreProduct("tokens_1500", "1500 Coins", "$1.89"),
+                StoreProduct("tokens_2000", "2000 Coins", "$2.89"),
+                StoreProduct("tokens_2500", "2500 Coins", "$3.89"),
+                StoreProduct("tokens_3000", "3000 Coins", "$4.89"),
+                StoreProduct("tokens_3500", "3500 Coins", "$5.89"),
+                StoreProduct("tokens_4000", "4000 Coins", "$6.89")
             )
             _products.value = mockProducts
             return
         }
 
         val productIds = listOf(
-            "coins_100", "coins_500", "coins_1000", "coins_1500",
-            "coins_2000", "coins_2500", "coins_3000", "coins_3500", "coins_4000"
+            "tokens_100", "tokens_500", "tokens_1000", "tokens_1500",
+            "tokens_2000", "tokens_2500", "tokens_3000", "tokens_3500", "tokens_4000"
         )
 
         val productList = productIds.map { id ->
@@ -103,9 +103,9 @@ class BillingRepository(
             .setProductList(productList)
             .build()
 
-        billingClient.queryProductDetailsAsync(params) { billingResult, productDetailsList ->
+        billingClient.queryProductDetailsAsync(params) { billingResult, result ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                val sortedProducts = productDetailsList.sortedBy { product ->
+                val sortedProducts = result.productDetailsList.sortedBy { product ->
                     getCoinAmountFromId(product.productId)
                 }.map {
                     StoreProduct(
@@ -178,15 +178,15 @@ class BillingRepository(
 
     private fun getCoinAmountFromId(productId: String): Int {
         return when (productId) {
-            "coins_100" -> 100
-            "coins_500" -> 500
-            "coins_1000" -> 1000
-            "coins_1500" -> 1500
-            "coins_2000" -> 2000
-            "coins_2500" -> 2500
-            "coins_3000" -> 3000
-            "coins_3500" -> 3500
-            "coins_4000" -> 4000
+            "tokens_100" -> 100
+            "tokens_500" -> 500
+            "tokens_1000" -> 1000
+            "tokens_1500" -> 1500
+            "tokens_2000" -> 2000
+            "tokens_2500" -> 2500
+            "tokens_3000" -> 3000
+            "tokens_3500" -> 3500
+            "tokens_4000" -> 4000
             else -> 0
         }
     }
