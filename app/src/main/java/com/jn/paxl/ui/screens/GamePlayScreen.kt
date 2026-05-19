@@ -47,6 +47,7 @@ import com.jn.paxl.model.GameUiState
 import com.jn.paxl.model.GridState
 import com.jn.paxl.ui.LocalSoundManager
 import com.jn.paxl.ui.components.BlockItem
+import com.jn.paxl.ui.components.DraggedBlockOverlay
 import com.jn.paxl.ui.components.GameGrid
 import com.jn.paxl.ui.components.RetroFont
 import com.jn.paxl.ui.theme.BackgroundDark
@@ -283,12 +284,12 @@ fun GamePlayScreenContent(
                                 gridOffset = gridOffset,
                                 cellSize = previewCellSizePx,
                                 gridCellSize = gridCellSizePx,
+                                isBeingDragged = draggedBlock?.id == block.id,
                                 onDragging = { b, offset ->
                                     draggedBlock = b
                                     draggedOffset = offset
                                 },
                                 onPlace = { pos ->
-                                    soundManager?.playPlace()
                                     onBlockPlaced(block, pos)
                                 }
                             )
@@ -296,6 +297,15 @@ fun GamePlayScreenContent(
                     }
                 }
             }
+        }
+
+        // Floating overlay — renders the dragged block above ALL screen content
+        if (draggedBlock != null && draggedOffset != null) {
+            DraggedBlockOverlay(
+                block = draggedBlock!!,
+                offset = draggedOffset!!,
+                cellSize = previewCellSizePx
+            )
         }
     }
 }

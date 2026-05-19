@@ -24,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.CornerRadius
@@ -187,6 +188,12 @@ fun GameGrid(
                 val canPlace =
                     GameEngine.canPlaceBlock(draggedBlock, Coordinate(gridX, gridY), gridState)
 
+                val isOverGrid = draggedBlock.shape.any { offset ->
+                    val x = gridX + offset.x
+                    val y = gridY + offset.y
+                    x in 0 until gridState.size && y in 0 until gridState.size
+                }
+
                 if (canPlace) {
                     draggedBlock.shape.forEach { offset ->
                         val targetTopLeft =
@@ -205,6 +212,29 @@ fun GameGrid(
                             style = Stroke(width = 2.dp.toPx())
                         )
                     }
+                } else if (isOverGrid) {
+                    // Show conflict color when block overlaps existing cells or is out of bounds
+                    val conflictColor = Color(0xFFFF3333)
+                    draggedBlock.shape.forEach { offset ->
+                        val x = gridX + offset.x
+                        val y = gridY + offset.y
+                        if (x in 0 until gridState.size && y in 0 until gridState.size) {
+                            val targetTopLeft = Offset(x * cellSizePx, y * cellSizePx)
+                            drawRoundRect(
+                                color = conflictColor.copy(alpha = 0.35f),
+                                topLeft = targetTopLeft,
+                                size = Size(cellSizePx, cellSizePx),
+                                cornerRadius = CornerRadius(4.dp.toPx())
+                            )
+                            drawRoundRect(
+                                color = conflictColor,
+                                topLeft = targetTopLeft,
+                                size = Size(cellSizePx, cellSizePx),
+                                cornerRadius = CornerRadius(4.dp.toPx()),
+                                style = Stroke(width = 2.dp.toPx())
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -217,6 +247,7 @@ fun BlockItem(
     gridOffset: Offset,
     cellSize: Float,
     gridCellSize: Float,
+    isBeingDragged: Boolean = false,
     onDragging: (Block?, Offset?) -> Unit,
     onPlace: (Coordinate) -> Unit
 ) {
@@ -228,6 +259,7 @@ fun BlockItem(
 
     Box(
         modifier = Modifier
+            .alpha(if (isBeingDragged) 0f else 1f)
             .onGloballyPositioned {
                 if (dragOffset == Offset.Zero) itemPosition = it.positionInRoot()
             }
@@ -292,3 +324,51 @@ fun BlockItem(
         }
     }
 }
+
+/**
+ * A top-level overlay that renders the actively dragged block floating above all other UI.
+ * Should be placed at the root Box level of the screen so it is never clipped.
+ */
+@Composable
+fun DraggedBlockOverlay(
+    block: Block,
+    offset: Offset,
+    cellSize: Float
+) {
+    val density = LocalDensity.current
+    val scaledCellSize = cellSize * 1.15f
+    val sizeDp = with(density) { (scaledCellSize * 4).toDp() }
+
+    Canvas(
+        modifier = Modifier
+            .size(sizeDp)
+            .offset { IntOffset(offset.x.roundToInt(), offset.y.roundToInt()) }
+    ) {
+        block.shape.forEach { coord ->
+            val topLeft = Offset(coord.x * scaledCellSize, coord.y * scaledCellSize)
+            // Glow background
+            drawRoundRect(
+                color = block.color.copy(alpha = 0.4f),
+                topLeft = topLeft,
+                size = Size(scaledCellSize, scaledCellSize),
+                cornerRadius = CornerRadius(4.dp.toPx())
+            )
+            // Main body
+            drawRoundRect(
+                color = block.color,
+                topLeft = topLeft.plus(Offset(2.dp.toPx(), 2.dp.toPx())),
+                size = Size(scaledCellSize - 4.dp.toPx(), scaledCellSize - 4.dp.toPx()),
+                cornerRadius = CornerRadius(4.dp.toPx())
+            )
+            // White border
+            drawRoundRect(
+                color = Color.White.copy(alpha = 0.5f),
+                topLeft = topLeft.plus(Offset(2.dp.toPx(), 2.dp.toPx())),
+                size = Size(scaledCellSize - 4.dp.toPx(), scaledCellSize - 4.dp.toPx()),
+                cornerRadius = CornerRadius(4.dp.toPx()),
+                style = Stroke(width = 1.5.dp.toPx())
+            )
+        }
+    }
+}
+
