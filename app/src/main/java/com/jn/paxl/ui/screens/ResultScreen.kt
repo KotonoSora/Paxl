@@ -28,6 +28,7 @@ import com.jn.paxl.ui.theme.GameTheme
 import com.jn.paxl.ui.theme.NeonCyan
 import com.jn.paxl.ui.theme.NeonGreen
 import com.jn.paxl.ui.theme.NeonPink
+import com.jn.paxl.ui.theme.NeonYellow
 import com.jn.paxl.viewmodel.GameViewModel
 
 @Composable
@@ -45,8 +46,12 @@ fun ResultScreen(viewModel: GameViewModel, onPlayAgain: () -> Unit, onHome: () -
 fun ResultScreenContent(uiState: GameUiState, onPlayAgain: () -> Unit, onHome: () -> Unit) {
     val soundManager = LocalSoundManager.current
 
-    LaunchedEffect(Unit) {
-        soundManager?.playLose()
+    LaunchedEffect(uiState.isWin) {
+        if (uiState.isWin) {
+            soundManager?.playWin()
+        } else {
+            soundManager?.playLose()
+        }
     }
 
     Box(
@@ -62,9 +67,21 @@ fun ResultScreenContent(uiState: GameUiState, onPlayAgain: () -> Unit, onHome: (
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            NeonTitle("GAME OVER", color = NeonPink, fontSize = 56)
+            NeonTitle(
+                if (uiState.isWin) "YOU WIN" else "GAME OVER",
+                color = if (uiState.isWin) NeonGreen else NeonPink,
+                fontSize = 56
+            )
             Spacer(Modifier.height(24.dp))
             NeonText("SCORE: ${uiState.score}", color = Color.White, fontSize = 32)
+            if (uiState.isWin) {
+                Spacer(Modifier.height(12.dp))
+                NeonText(
+                    "REWARD: +${uiState.winTokenReward} TOKENS",
+                    color = NeonYellow,
+                    fontSize = 20
+                )
+            }
             Spacer(Modifier.height(48.dp))
 
             NeonButton(

@@ -19,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -69,6 +70,7 @@ class GameViewModelTest {
         // Mock flows
         every { dataStoreRepository.coinsFlow } returns flowOf(100)
         every { dataStoreRepository.highScoreFlow } returns flowOf(0)
+        every { dataStoreRepository.leaderboardFlow } returns flowOf(emptyList())
         every { dataStoreRepository.soundEnabledFlow } returns flowOf(true)
         every { dataStoreRepository.musicEnabledFlow } returns flowOf(true)
 
@@ -124,10 +126,18 @@ class GameViewModelTest {
 
         val state = viewModel.uiState.value
         assertEquals(scoreBeforeClear + 110, state.score)
-
+        assertTrue(state.isClearing)
         for (x in 0 until 10) {
             assertNull(state.grid.cells[Coordinate(x, 0)])
         }
+
+        advanceTimeBy(1000)
+        advanceUntilIdle()
+
+        val clearedState = viewModel.uiState.value
+        assertFalse(clearedState.isClearing)
+
+        assertTrue(clearedState.clearingCells.isEmpty())
     }
 
 

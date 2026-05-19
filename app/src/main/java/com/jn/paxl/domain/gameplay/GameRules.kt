@@ -6,6 +6,11 @@ import com.jn.paxl.model.Coordinate
 import com.jn.paxl.model.GridState
 
 object GameRules {
+    data class LineClearInfo(
+        val cellsToClear: Set<Coordinate>,
+        val linesCleared: Int
+    )
+
     fun canPlaceBlock(block: Block, position: Coordinate, grid: GridState): Boolean {
         return block.shape.all { offset ->
             val x = position.x + offset.x
@@ -14,7 +19,7 @@ object GameRules {
         }
     }
 
-    fun clearLines(cells: Map<Coordinate, Color?>, size: Int): Pair<Map<Coordinate, Color?>, Int> {
+    fun findLineClearInfo(cells: Map<Coordinate, Color?>, size: Int): LineClearInfo? {
         val rowsToClear = (0 until size).filter { y ->
             (0 until size).all { x -> cells[Coordinate(x, y)] != null }
         }
@@ -22,17 +27,33 @@ object GameRules {
             (0 until size).all { y -> cells[Coordinate(x, y)] != null }
         }
 
-        if (rowsToClear.isEmpty() && colsToClear.isEmpty()) return Pair(cells, 0)
+        if (rowsToClear.isEmpty() && colsToClear.isEmpty()) return null
 
-        val newCells = cells.toMutableMap()
+        val cellsToClear = mutableSetOf<Coordinate>()
         rowsToClear.forEach { y ->
-            (0 until size).forEach { x -> newCells.remove(Coordinate(x, y)) }
+            (0 until size).forEach { x -> cellsToClear.add(Coordinate(x, y)) }
         }
         colsToClear.forEach { x ->
-            (0 until size).forEach { y -> newCells.remove(Coordinate(x, y)) }
+            (0 until size).forEach { y -> cellsToClear.add(Coordinate(x, y)) }
         }
 
-        return Pair(newCells, rowsToClear.size + colsToClear.size)
+        return LineClearInfo(
+            cellsToClear = cellsToClear,
+            linesCleared = rowsToClear.size + colsToClear.size
+        )
+    }
+
+    fun clearCells(cells: Map<Coordinate, Color?>, cellsToClear: Set<Coordinate>): Map<Coordinate, Color?> {
+        if (cellsToClear.isEmpty()) return cells
+
+        val newCells = cells.toMutableMap()
+        cellsToClear.forEach { coord -> newCells.remove(coord) }
+        return newCells
+    }
+
+    fun clearLines(cells: Map<Coordinate, Color?>, size: Int): Pair<Map<Coordinate, Color?>, Int> {
+        val clearInfo = findLineClearInfo(cells, size) ?: return Pair(cells, 0)
+        return Pair(clearCells(cells, clearInfo.cellsToClear), clearInfo.linesCleared)
     }
 
     fun checkGameOver(

@@ -21,6 +21,7 @@ import com.jn.paxl.ui.screens.PauseScreen
 import com.jn.paxl.ui.screens.ResultScreen
 import com.jn.paxl.ui.screens.SettingsScreen
 import com.jn.paxl.viewmodel.GameViewModel
+import com.jn.paxl.model.PlayMode
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
@@ -59,7 +60,7 @@ fun GameNavigation(viewModel: GameViewModel = viewModel()) {
             composable(Screen.ModeSelect.route) {
                 ModeSelectScreen(
                     onModeSelected = {
-                        viewModel.startNewGame()
+                        viewModel.startNewGame(mode = PlayMode.CLASSIC)
                         navController.navigate(Screen.GamePlay.route)
                     },
                     onLevelSelectClick = { navController.navigate(Screen.LevelSelect.route) },
@@ -69,7 +70,7 @@ fun GameNavigation(viewModel: GameViewModel = viewModel()) {
             composable(Screen.LevelSelect.route) {
                 LevelSelectScreen(
                     onLevelSelected = { selectedLevel ->
-                        viewModel.startNewGame(selectedLevel)
+                        viewModel.startNewGame(level = selectedLevel, mode = PlayMode.LEVELS)
                         navController.navigate(Screen.GamePlay.route)
                     },
                     onBack = { navController.popBackStack() }
@@ -126,6 +127,7 @@ fun GameNavigation(viewModel: GameViewModel = viewModel()) {
                     viewModel = viewModel,
                     onBack = { navController.popBackStack() },
                     onStartChallenge = {
+                        viewModel.startNewGame(mode = PlayMode.DAILY)
                         navController.navigate(Screen.GamePlay.route) {
                             popUpTo(Screen.Home.route)
                         }
@@ -133,7 +135,10 @@ fun GameNavigation(viewModel: GameViewModel = viewModel()) {
                 )
             }
             composable(Screen.Leaderboard.route) {
-                LeaderboardScreen(onBack = { navController.popBackStack() })
+                LeaderboardScreen(
+                    viewModel,
+                    onBack = { navController.popBackStack() }
+                )
             }
         }
     }

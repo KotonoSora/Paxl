@@ -8,6 +8,8 @@ import com.jn.paxl.application.gameplay.GameplayUseCases
 import com.jn.paxl.model.Block
 import com.jn.paxl.model.Coordinate
 import com.jn.paxl.model.GameUiState
+import com.jn.paxl.model.LeaderboardEntry
+import com.jn.paxl.model.PlayMode
 import com.jn.paxl.repository.BillingRepository
 import com.jn.paxl.repository.DataStoreRepository
 import com.jn.paxl.repository.StoreProduct
@@ -18,6 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -31,9 +34,13 @@ class GameViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(GameUiState())
     val uiState: StateFlow<GameUiState> = _uiState.asStateFlow()
 
+    private val _leaderboard = MutableStateFlow<List<LeaderboardEntry>>(emptyList())
+    val leaderboard: StateFlow<List<LeaderboardEntry>> = _leaderboard.asStateFlow()
+
     val shopProducts: StateFlow<List<StoreProduct>> = billingRepository.products
 
     private val gridHistory = mutableListOf<Map<Coordinate, Color?>>()
+    private var sessionStartMs: Long = System.currentTimeMillis()
 
     init {
         // Load persisted data
@@ -55,23 +62,75 @@ class GameViewModel @Inject constructor(
             }.collect()
         }
 
+        viewModelScope.launch {
+            repository.leaderboardFlow.collect { entries ->
+                _leaderboard.value = sortLeaderboard(entries)
+            }
+        }
+
         startNewGame()
     }
 
-    fun startNewGame(level: Int = 1) {
-        _uiState.update { state -> gameplayUseCases.startNewGame(state, level) }
+    fun startNewGame(level: Int = 1, mode: PlayMode = PlayMode.CLASSIC) {
+        _uiState.update { state -> gameplayUseCases.startNewGame(state, level, mode) }
         gridHistory.clear()
+        sessionStartMs = System.currentTimeMillis()
     }
 
     fun onBlockPlaced(block: Block, gridPosition: Coordinate) {
         val currentState = _uiState.value
+        if (currentState.isGameOver) return
+
         val placeResult = gameplayUseCases.placeBlock(currentState, block, gridPosition) ?: return
 
         gridHistory.add(placeResult.previousGridSnapshot)
-        _uiState.value = placeResult.newState
 
-        if (placeResult.newState.score > currentState.highScore) {
-            viewModelScope.launch { repository.saveHighScore(placeResult.newState.score) }
+        var finalState = placeResult.newState
+        val reachedWinTarget = !currentState.isGameOver && finalState.score >= finalState.targetScore
+        if (reachedWinTarget) {
+            finalState = finalState.copy(
+                isGameOver = true,
+                isWin = true,
+                tokens = finalState.tokens + finalState.winTokenReward
+            )
+        }
+
+        _uiState.value = finalState
+
+        if (finalState.score > currentState.highScore) {
+            viewModelScope.launch { repository.saveHighScore(finalState.score) }
+        }
+
+        if (finalState.isWin && finalState.tokens != currentState.tokens) {
+            viewModelScope.launch { repository.saveCoins(finalState.tokens) }
+        }
+
+        if (!currentState.isGameOver && finalState.isGameOver) {
+            val now = System.currentTimeMillis()
+            val elapsedSeconds = ((now - sessionStartMs) / 1000L).coerceAtLeast(0L)
+            val entry = LeaderboardEntry(
+                score = finalState.score,
+                durationSeconds = elapsedSeconds,
+                recordedAtEpochMs = now
+            )
+            viewModelScope.launch {
+                repository.saveLeaderboardEntry(entry)
+            }
+        }
+
+        if (placeResult.clearInfo != null) {
+            val animationId = placeResult.newState.clearAnimationId
+            viewModelScope.launch {
+                delay(1000)
+                _uiState.update { state ->
+                    if (!state.isClearing || state.clearAnimationId != animationId) return@update state
+                    state.copy(
+                        isClearing = false,
+                        clearAnimationId = state.clearAnimationId,
+                        clearingCells = emptyMap()
+                    )
+                }
+            }
         }
     }
 
@@ -106,5 +165,13 @@ class GameViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         billingRepository.endConnection()
+    }
+
+    private fun sortLeaderboard(entries: List<LeaderboardEntry>): List<LeaderboardEntry> {
+        return entries.sortedWith(
+            compareByDescending<LeaderboardEntry> { it.score }
+                .thenBy { it.durationSeconds }
+                .thenByDescending { it.recordedAtEpochMs }
+        )
     }
 }

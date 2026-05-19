@@ -112,6 +112,12 @@ fun GamePlayScreenContent(
         if (uiState.isGameOver) onGameOver()
     }
 
+    LaunchedEffect(uiState.isClearing) {
+        if (uiState.isClearing) {
+            soundManager?.playVanish()
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -178,6 +184,21 @@ fun GamePlayScreenContent(
                 )
             }
 
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "${uiState.playMode.name} GOAL: ${uiState.targetScore}  WIN +${uiState.winTokenReward}",
+                    color = NeonYellow,
+                    fontFamily = RetroFont,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
             Spacer(Modifier.height(16.dp))
 
             // Game Grid Area
@@ -192,6 +213,8 @@ fun GamePlayScreenContent(
                     gridState = uiState.grid,
                     draggedBlock = draggedBlock,
                     draggedOffset = draggedOffset,
+                    isClearing = uiState.isClearing,
+                    clearingCells = uiState.clearingCells,
                     gridOffset = gridOffset,
                     onGridMeasured = { offset, measuredCellSizePx ->
                         if (gridOffset != offset) gridOffset = offset
