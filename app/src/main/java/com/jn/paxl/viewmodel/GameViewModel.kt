@@ -14,13 +14,13 @@ import com.jn.paxl.repository.BillingRepository
 import com.jn.paxl.repository.DataStoreRepository
 import com.jn.paxl.repository.StoreProduct
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -40,7 +40,6 @@ class GameViewModel @Inject constructor(
     val shopProducts: StateFlow<List<StoreProduct>> = billingRepository.products
 
     private val gridHistory = mutableListOf<Map<Coordinate, Color?>>()
-    private var sessionStartMs: Long = System.currentTimeMillis()
 
     init {
         // Load persisted data
@@ -74,7 +73,6 @@ class GameViewModel @Inject constructor(
     fun startNewGame(level: Int = 1, mode: PlayMode = PlayMode.CLASSIC) {
         _uiState.update { state -> gameplayUseCases.startNewGame(state, level, mode) }
         gridHistory.clear()
-        sessionStartMs = System.currentTimeMillis()
     }
 
     fun onBlockPlaced(block: Block, gridPosition: Coordinate) {
@@ -86,7 +84,7 @@ class GameViewModel @Inject constructor(
         gridHistory.add(placeResult.previousGridSnapshot)
 
         var finalState = placeResult.newState
-        val reachedWinTarget = !currentState.isGameOver && finalState.score >= finalState.targetScore
+        val reachedWinTarget = !finalState.isWinConditionSkipped && finalState.score >= finalState.targetScore
         if (reachedWinTarget) {
             finalState = finalState.copy(
                 isGameOver = true,
@@ -105,9 +103,9 @@ class GameViewModel @Inject constructor(
             viewModelScope.launch { repository.saveCoins(finalState.tokens) }
         }
 
-        if (!currentState.isGameOver && finalState.isGameOver) {
+        if (finalState.isGameOver) {
             val now = System.currentTimeMillis()
-            val elapsedSeconds = ((now - sessionStartMs) / 1000L).coerceAtLeast(0L)
+            val elapsedSeconds = ((now - finalState.sessionStartMs) / 1000L).coerceAtLeast(0L)
             val entry = LeaderboardEntry(
                 score = finalState.score,
                 durationSeconds = elapsedSeconds,
@@ -132,6 +130,45 @@ class GameViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun continuePlayAfterGameOver() {
+        val currentState = _uiState.value
+        if (!currentState.isGameOver) return
+
+        if (currentState.isWin) {
+            _uiState.value = currentState.copy(
+                isGameOver = false,
+                isWin = false,
+                isWinConditionSkipped = true,
+                isClearing = false,
+                clearAnimationId = 0L,
+                clearingCells = emptyMap()
+            )
+            return
+        }
+
+        if (currentState.tokens < currentState.continueTokenCost) return
+
+        val continuedState = gameplayUseCases.startNewGame(
+            previousState = currentState,
+            level = currentState.currentLevel,
+            mode = currentState.playMode
+        ).copy(
+            score = currentState.score,
+            tokens = currentState.tokens - currentState.continueTokenCost,
+            sessionStartMs = currentState.sessionStartMs,
+            isGameOver = false,
+            isWin = false,
+            isWinConditionSkipped = false,
+            isClearing = false,
+            clearAnimationId = 0L,
+            clearingCells = emptyMap()
+        )
+
+        gridHistory.clear()
+        _uiState.value = continuedState
+        viewModelScope.launch { repository.saveCoins(continuedState.tokens) }
     }
 
     fun undoMove() {

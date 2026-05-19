@@ -3,8 +3,8 @@ package com.jn.paxl.ui.components
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -147,8 +147,10 @@ fun GameGrid(
                         val shrink = 0.45f * vanishProgress
                         val dynamicInset = (cellSizePx * shrink) / 2f
                         val baseInset = 2.dp.toPx()
-                        val bodyTopLeft = topLeft.plus(Offset(baseInset + dynamicInset, baseInset + dynamicInset))
-                        val bodySize = (cellSizePx - (2 * baseInset) - (2 * dynamicInset)).coerceAtLeast(0f)
+                        val bodyTopLeft =
+                            topLeft.plus(Offset(baseInset + dynamicInset, baseInset + dynamicInset))
+                        val bodySize =
+                            (cellSizePx - (2 * baseInset) - (2 * dynamicInset)).coerceAtLeast(0f)
 
                         drawRoundRect(
                             color = color.copy(alpha = 0.4f * alpha),

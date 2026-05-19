@@ -9,6 +9,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.jn.paxl.model.PlayMode
 import com.jn.paxl.ui.screens.CoinShopScreen
 import com.jn.paxl.ui.screens.DailyChallengeScreen
 import com.jn.paxl.ui.screens.GamePlayScreen
@@ -21,7 +22,6 @@ import com.jn.paxl.ui.screens.PauseScreen
 import com.jn.paxl.ui.screens.ResultScreen
 import com.jn.paxl.ui.screens.SettingsScreen
 import com.jn.paxl.viewmodel.GameViewModel
-import com.jn.paxl.model.PlayMode
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
@@ -100,6 +100,10 @@ fun GameNavigation(viewModel: GameViewModel = viewModel()) {
             composable(Screen.Result.route) {
                 ResultScreen(
                     viewModel = viewModel,
+                    onContinue = {
+                        viewModel.continuePlayAfterGameOver()
+                        navController.popBackStack()
+                    },
                     onPlayAgain = {
                         viewModel.startNewGame()
                         navController.navigate(Screen.GamePlay.route) {

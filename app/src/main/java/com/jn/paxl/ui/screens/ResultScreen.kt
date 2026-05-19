@@ -32,19 +32,31 @@ import com.jn.paxl.ui.theme.NeonYellow
 import com.jn.paxl.viewmodel.GameViewModel
 
 @Composable
-fun ResultScreen(viewModel: GameViewModel, onPlayAgain: () -> Unit, onHome: () -> Unit) {
+fun ResultScreen(
+    viewModel: GameViewModel,
+    onContinue: () -> Unit,
+    onPlayAgain: () -> Unit,
+    onHome: () -> Unit
+) {
     val uiState by viewModel.uiState.collectAsState()
 
     ResultScreenContent(
         uiState = uiState,
+        onContinue = onContinue,
         onPlayAgain = onPlayAgain,
         onHome = onHome
     )
 }
 
 @Composable
-fun ResultScreenContent(uiState: GameUiState, onPlayAgain: () -> Unit, onHome: () -> Unit) {
+fun ResultScreenContent(
+    uiState: GameUiState,
+    onContinue: () -> Unit,
+    onPlayAgain: () -> Unit,
+    onHome: () -> Unit
+) {
     val soundManager = LocalSoundManager.current
+    val canContinue = uiState.isWin || uiState.tokens >= uiState.continueTokenCost
 
     LaunchedEffect(uiState.isWin) {
         if (uiState.isWin) {
@@ -84,6 +96,26 @@ fun ResultScreenContent(uiState: GameUiState, onPlayAgain: () -> Unit, onHome: (
             }
             Spacer(Modifier.height(48.dp))
 
+            if (!uiState.isWin) {
+                NeonText(
+                    text = "CONTINUE COST: ${uiState.continueTokenCost} TOKENS",
+                    color = if (canContinue) NeonYellow else NeonPink,
+                    fontSize = 16
+                )
+                Spacer(Modifier.height(8.dp))
+            }
+
+            NeonButton(
+                text = if (uiState.isWin) "CONTINUE PLAY" else "CONTINUE",
+                color = NeonYellow,
+                enabled = canContinue,
+                onClick = {
+                    soundManager?.playClick()
+                    onContinue()
+                }
+            )
+            Spacer(Modifier.height(16.dp))
+
             NeonButton(
                 text = "PLAY AGAIN",
                 color = NeonGreen,
@@ -111,6 +143,7 @@ fun ResultScreenPreview() {
     GameTheme {
         ResultScreenContent(
             uiState = GameUiState(score = 1234),
+            onContinue = {},
             onPlayAgain = {},
             onHome = {}
         )

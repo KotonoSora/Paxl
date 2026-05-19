@@ -28,7 +28,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -91,22 +90,17 @@ fun GamePlayScreenContent(
     var draggedOffset by remember { mutableStateOf<Offset?>(null) }
     var gridOffset by remember { mutableStateOf(Offset.Zero) }
     var gridCellSizePx by remember { mutableFloatStateOf(0f) }
-    var sessionStartMs by remember { mutableLongStateOf(System.currentTimeMillis()) }
     val density = LocalDensity.current
 
     val previewCellSizePx = with(density) { 24.dp.toPx() }
-    val elapsedSeconds by produceState(initialValue = 0L, key1 = sessionStartMs) {
+    val elapsedSeconds by produceState(initialValue = 0L, key1 = uiState.sessionStartMs) {
         while (true) {
-            value = ((System.currentTimeMillis() - sessionStartMs) / 1000L).coerceAtLeast(0L)
+            value =
+                ((System.currentTimeMillis() - uiState.sessionStartMs) / 1000L).coerceAtLeast(0L)
             delay(1000)
         }
     }
 
-    LaunchedEffect(uiState.score) {
-        if (uiState.score == 0 && !uiState.isGameOver) {
-            sessionStartMs = System.currentTimeMillis()
-        }
-    }
 
     LaunchedEffect(uiState.isGameOver) {
         if (uiState.isGameOver) onGameOver()
@@ -191,7 +185,11 @@ fun GamePlayScreenContent(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "${uiState.playMode.name} GOAL: ${uiState.targetScore}  WIN +${uiState.winTokenReward}",
+                    text = if (uiState.isWinConditionSkipped) {
+                        "${uiState.playMode.name} GOAL SKIPPED"
+                    } else {
+                        "${uiState.playMode.name} GOAL: ${uiState.targetScore}  WIN +${uiState.winTokenReward}"
+                    },
                     color = NeonYellow,
                     fontFamily = RetroFont,
                     fontSize = 14.sp,

@@ -27,9 +27,11 @@ class StartNewGameUseCase(
             playMode = mode,
             targetScore = targetScore,
             winTokenReward = winTokenReward,
+            sessionStartMs = System.currentTimeMillis(),
             score = 0,
             tokens = previousState.tokens,
             isWin = false,
+            isWinConditionSkipped = false,
             highScore = previousState.highScore,
             soundEnabled = previousState.soundEnabled,
             musicEnabled = previousState.musicEnabled

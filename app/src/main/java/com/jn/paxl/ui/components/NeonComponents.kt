@@ -27,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -49,9 +50,11 @@ fun NeonButton(
     color: Color,
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
+    enabled: Boolean = true,
     onClick: () -> Unit
 ) {
     val shape = RoundedCornerShape(50)
+    val contentAlpha = if (enabled) 1f else 0.45f
 
     Box(
         modifier = modifier
@@ -63,6 +66,7 @@ fun NeonButton(
             modifier = Modifier
                 .fillMaxSize()
                 .clip(shape)
+                .alpha(contentAlpha)
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
@@ -71,7 +75,7 @@ fun NeonButton(
                     )
                 )
                 .border(2.dp, color, shape)
-                .clickable { onClick() }
+                .clickable(enabled = enabled) { onClick() }
                 .padding(horizontal = 24.dp),
             verticalAlignment = Alignment.CenterVertically) {
             if (icon != null) {

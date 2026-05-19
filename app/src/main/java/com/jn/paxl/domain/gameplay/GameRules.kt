@@ -43,7 +43,10 @@ object GameRules {
         )
     }
 
-    fun clearCells(cells: Map<Coordinate, Color?>, cellsToClear: Set<Coordinate>): Map<Coordinate, Color?> {
+    fun clearCells(
+        cells: Map<Coordinate, Color?>,
+        cellsToClear: Set<Coordinate>
+    ): Map<Coordinate, Color?> {
         if (cellsToClear.isEmpty()) return cells
 
         val newCells = cells.toMutableMap()
