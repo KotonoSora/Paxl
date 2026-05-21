@@ -43,8 +43,8 @@ import com.jn.paxl.domain.shop.ShopUiState
 import com.jn.paxl.model.GameUiState
 import com.jn.paxl.ui.LocalSoundManager
 import com.jn.paxl.ui.components.GameBackHeader
-import com.jn.paxl.ui.components.NeonButton
 import com.jn.paxl.ui.components.GameScreenScaffold
+import com.jn.paxl.ui.components.NeonButton
 import com.jn.paxl.ui.components.NeonText
 import com.jn.paxl.ui.components.RetroFont
 import com.jn.paxl.ui.theme.GameTheme
@@ -283,15 +283,15 @@ fun CoinShopScreenPreview() {
             uiState = GameUiState(tokens = 500),
             shopUiState = ShopUiState.Ready(
                 products = listOf(
-                ShopProduct("tokens_100", 100, "$0.59"),
-                ShopProduct("tokens_500", 500, "$0.79"),
-                ShopProduct("tokens_1000", 1000, "$0.99"),
-                ShopProduct("tokens_1500", 1500, "$1.89"),
-                ShopProduct("tokens_2000", 2000, "$2.89"),
-                ShopProduct("tokens_2500", 2500, "$3.89"),
-                ShopProduct("tokens_3000", 3000, "$4.89"),
-                ShopProduct("tokens_3500", 3500, "$5.89"),
-                ShopProduct("tokens_4000", 4000, "$6.89"),
+                    ShopProduct("tokens_100", 100, "$0.59"),
+                    ShopProduct("tokens_500", 500, "$0.79"),
+                    ShopProduct("tokens_1000", 1000, "$0.99"),
+                    ShopProduct("tokens_1500", 1500, "$1.89"),
+                    ShopProduct("tokens_2000", 2000, "$2.89"),
+                    ShopProduct("tokens_2500", 2500, "$3.89"),
+                    ShopProduct("tokens_3000", 3000, "$4.89"),
+                    ShopProduct("tokens_3500", 3500, "$5.89"),
+                    ShopProduct("tokens_4000", 4000, "$6.89"),
                 )
             ),
             onBack = {},

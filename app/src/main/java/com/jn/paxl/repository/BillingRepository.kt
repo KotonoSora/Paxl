@@ -132,14 +132,16 @@ class BillingRepository(
                             productId = details.productId,
                             tokenAmount = tokenAmount,
                             title = "$tokenAmount Tokens",
-                            price = details.oneTimePurchaseOfferDetails?.formattedPrice ?: "Unknown",
+                            price = details.oneTimePurchaseOfferDetails?.formattedPrice
+                                ?: "Unknown",
                             originalDetails = details
                         )
                     }
                     .sortedBy { it.tokenAmount }
 
                 _products.value = sortedProducts
-                _billingStatus.value = if (sortedProducts.isEmpty()) BillingStatus.EMPTY else BillingStatus.CONNECTED
+                _billingStatus.value =
+                    if (sortedProducts.isEmpty()) BillingStatus.EMPTY else BillingStatus.CONNECTED
             } else {
                 _billingStatus.value = BillingStatus.ERROR
             }

@@ -95,7 +95,8 @@ class GameViewModel @Inject constructor(
         gridHistory.add(placeResult.previousGridSnapshot)
 
         var finalState = placeResult.newState
-        val reachedWinTarget = !finalState.isWinConditionSkipped && finalState.score >= finalState.targetScore
+        val reachedWinTarget =
+            !finalState.isWinConditionSkipped && finalState.score >= finalState.targetScore
         if (reachedWinTarget) {
             finalState = finalState.copy(
                 isGameOver = true,
