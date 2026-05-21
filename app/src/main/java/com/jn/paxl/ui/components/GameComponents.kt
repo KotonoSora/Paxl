@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -265,45 +264,46 @@ fun BlockItem(
     val scaleAnim = remember { Animatable(1f) }
     val scope = rememberCoroutineScope()
 
-    Box(modifier = Modifier
-        .alpha(if (isBeingDragged) 0f else 1f)
-        .onGloballyPositioned {
-            if (dragOffset == Offset.Zero) itemPosition = it.positionInRoot()
-        }
-        .offset { IntOffset(dragOffset.x.roundToInt(), dragOffset.y.roundToInt()) }
-        .scale(scaleAnim.value)
-        .pointerInput(block.id) {
-            detectDragGestures(onDragStart = {
-                scope.launch { scaleAnim.animateTo(1.2f) }
-                onDragging(block, itemPosition + dragOffset)
-            }, onDragEnd = {
-                if (gridCellSize <= 0f) {
+    Box(
+        modifier = Modifier
+            .alpha(if (isBeingDragged) 0f else 1f)
+            .onGloballyPositioned {
+                if (dragOffset == Offset.Zero) itemPosition = it.positionInRoot()
+            }
+            .offset { IntOffset(dragOffset.x.roundToInt(), dragOffset.y.roundToInt()) }
+            .scale(scaleAnim.value)
+            .pointerInput(block.id) {
+                detectDragGestures(onDragStart = {
+                    scope.launch { scaleAnim.animateTo(1.2f) }
+                    onDragging(block, itemPosition + dragOffset)
+                }, onDragEnd = {
+                    if (gridCellSize <= 0f) {
+                        onDragging(null, null)
+                        dragOffset = Offset.Zero
+                        scope.launch { scaleAnim.animateTo(1f) }
+                        return@detectDragGestures
+                    }
+
+                    val dropPosition = itemPosition + dragOffset
+                    val relativeX = dropPosition.x - gridOffset.x
+                    val relativeY = dropPosition.y - gridOffset.y
+                    val gridX = floor(relativeX / gridCellSize).toInt()
+                    val gridY = floor(relativeY / gridCellSize).toInt()
+
+                    onPlace(Coordinate(gridX, gridY))
                     onDragging(null, null)
                     dragOffset = Offset.Zero
                     scope.launch { scaleAnim.animateTo(1f) }
-                    return@detectDragGestures
-                }
-
-                val dropPosition = itemPosition + dragOffset
-                val relativeX = dropPosition.x - gridOffset.x
-                val relativeY = dropPosition.y - gridOffset.y
-                val gridX = floor(relativeX / gridCellSize).toInt()
-                val gridY = floor(relativeY / gridCellSize).toInt()
-
-                onPlace(Coordinate(gridX, gridY))
-                onDragging(null, null)
-                dragOffset = Offset.Zero
-                scope.launch { scaleAnim.animateTo(1f) }
-            }, onDragCancel = {
-                onDragging(null, null)
-                dragOffset = Offset.Zero
-                scope.launch { scaleAnim.animateTo(1f) }
-            }, onDrag = { change, dragAmount ->
-                change.consume()
-                dragOffset += dragAmount
-                onDragging(block, itemPosition + dragOffset)
-            })
-        }) {
+                }, onDragCancel = {
+                    onDragging(null, null)
+                    dragOffset = Offset.Zero
+                    scope.launch { scaleAnim.animateTo(1f) }
+                }, onDrag = { change, dragAmount ->
+                    change.consume()
+                    dragOffset += dragAmount
+                    onDragging(block, itemPosition + dragOffset)
+                })
+            }) {
         val sizeDp = with(density) { (cellSize * 3).toDp() }
         Canvas(modifier = Modifier.size(sizeDp)) {
             val minX = block.shape.minOfOrNull { it.x } ?: 0

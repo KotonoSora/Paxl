@@ -308,12 +308,12 @@ fun GamePlayScreenPreview() {
         val previewBlocks = ShapeLibrary.getPreviewBlocks().take(3)
         GamePlayScreenContent(
             uiState = GameUiState(
-            grid = GridState(size = 10),
-            availableBlocks = previewBlocks,
-            tokens = 100,
-            score = 500,
-            currentLevel = 1
-        ),
+                grid = GridState(size = 10),
+                availableBlocks = previewBlocks,
+                tokens = 100,
+                score = 500,
+                currentLevel = 1
+            ),
             onPauseClick = {},
             onGameOver = {},
             onReshuffle = {},
