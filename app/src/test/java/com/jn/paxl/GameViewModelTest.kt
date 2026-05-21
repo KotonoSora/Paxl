@@ -6,7 +6,10 @@ import com.jn.paxl.application.gameplay.PlaceBlockUseCase
 import com.jn.paxl.application.gameplay.ReshuffleBlocksUseCase
 import com.jn.paxl.application.gameplay.StartNewGameUseCase
 import com.jn.paxl.application.gameplay.UndoMoveUseCase
+import com.jn.paxl.application.shop.ObserveShopUiStateUseCase
+import com.jn.paxl.application.shop.ShopUseCases
 import com.jn.paxl.domain.gameplay.port.BlockCatalog
+import com.jn.paxl.repository.BillingStatus
 import com.jn.paxl.model.Block
 import com.jn.paxl.model.Coordinate
 import com.jn.paxl.repository.BillingRepository
@@ -18,6 +21,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -63,6 +67,10 @@ class GameViewModelTest {
         reshuffleBlocks = ReshuffleBlocksUseCase(fakeCatalog)
     )
 
+    private val shopUseCases = ShopUseCases(
+        observeShopUiState = ObserveShopUiStateUseCase()
+    )
+
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
@@ -73,8 +81,15 @@ class GameViewModelTest {
         every { dataStoreRepository.leaderboardFlow } returns flowOf(emptyList())
         every { dataStoreRepository.soundEnabledFlow } returns flowOf(true)
         every { dataStoreRepository.musicEnabledFlow } returns flowOf(true)
+        every { billingRepository.products } returns MutableStateFlow(emptyList())
+        every { billingRepository.billingStatus } returns MutableStateFlow(BillingStatus.CONNECTED)
 
-        viewModel = GameViewModel(dataStoreRepository, billingRepository, gameplayUseCases)
+        viewModel = GameViewModel(
+            dataStoreRepository,
+            billingRepository,
+            gameplayUseCases,
+            shopUseCases
+        )
     }
 
     @After
