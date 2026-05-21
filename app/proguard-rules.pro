@@ -47,13 +47,6 @@
 # Google Play Billing
 -dontwarn com.android.billingclient.api.**
 
-# Play Services Location
--dontwarn com.google.android.gms.location.**
-
-# CameraX
--keep class androidx.camera.lifecycle.** { *; }
--keep class androidx.camera.view.** { *; }
--dontwarn androidx.camera.**
 
 # Game Models (Keep for persistence/serialization)
 -keep class com.jn.paxl.model.** { *; }

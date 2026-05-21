@@ -55,3 +55,5 @@ google-services.json
 input_images/
 
 .kotlin/
+
+app/release/**/*.dm

@@ -3,11 +3,9 @@ package com.jn.paxl.ui.screens
 import android.app.Activity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -43,15 +41,11 @@ fun CoinShopScreen(viewModel: GameViewModel, onBack: () -> Unit) {
     val context = LocalContext.current
 
     CoinShopScreenContent(
-        uiState = uiState,
-        products = products,
-        onBack = onBack,
-        onPurchase = { product ->
+        uiState = uiState, products = products, onBack = onBack, onPurchase = { product ->
             (context as? Activity)?.let { activity ->
                 viewModel.purchaseCoins(activity, product)
             }
-        }
-    )
+        })
 }
 
 @Composable
@@ -64,30 +58,21 @@ fun CoinShopScreenContent(
     val soundManager = LocalSoundManager.current
 
     GameScreenScaffold {
-        GameBackHeader(
-            title = "SHOP",
-            titleColor = NeonYellow,
-            titleFontSize = 32,
-            onBack = {
-                soundManager?.playClick()
-                onBack()
-            },
-            horizontalSpacing = 8.dp,
-            trailing = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.Stars,
-                        contentDescription = null,
-                        tint = NeonYellow,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    NeonText("${uiState.tokens}", color = NeonYellow, fontSize = 20)
-                }
+        GameBackHeader(title = "SHOP", titleColor = NeonYellow, titleFontSize = 24, onBack = {
+            soundManager?.playClick()
+            onBack()
+        }, horizontalSpacing = 8.dp, trailing = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Default.Stars,
+                    contentDescription = null,
+                    tint = NeonYellow,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                NeonText("${uiState.tokens}", color = NeonYellow, fontSize = 20)
             }
-        )
-
-        Spacer(Modifier.height(24.dp))
+        })
 
         if (products.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -95,19 +80,14 @@ fun CoinShopScreenContent(
             }
         } else {
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(bottom = 24.dp)
+                modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(products) { product ->
                     NeonButton(
-                        text = "${product.title} - ${product.price}",
-                        color = NeonCyan,
-                        onClick = {
+                        text = "${product.title} - ${product.price}", color = NeonCyan, onClick = {
                             soundManager?.playClick()
                             onPurchase(product)
-                        }
-                    )
+                        })
                 }
             }
         }
@@ -122,10 +102,22 @@ fun CoinShopScreenPreview() {
             uiState = GameUiState(tokens = 500),
             products = listOf(
                 StoreProduct("1", "100 COINS", "0.99$"),
-                StoreProduct("2", "500 COINS", "3.99$")
+                StoreProduct("2", "500 COINS", "3.99$"),
             ),
             onBack = {},
-            onPurchase = {}
+            onPurchase = {},
         )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun EmptyCoinShopScreenPreview() {
+    GameTheme {
+        CoinShopScreenContent(
+            uiState = GameUiState(tokens = 500),
+            products = listOf(),
+            onBack = {},
+            onPurchase = {})
     }
 }
