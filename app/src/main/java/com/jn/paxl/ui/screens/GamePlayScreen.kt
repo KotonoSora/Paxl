@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
@@ -38,6 +38,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,6 +46,7 @@ import com.jn.paxl.model.Block
 import com.jn.paxl.model.Coordinate
 import com.jn.paxl.model.GameUiState
 import com.jn.paxl.model.GridState
+import com.jn.paxl.model.ShapeLibrary
 import com.jn.paxl.ui.LocalSoundManager
 import com.jn.paxl.ui.components.BlockItem
 import com.jn.paxl.ui.components.DraggedBlockOverlay
@@ -61,9 +63,7 @@ import kotlin.math.abs
 
 @Composable
 fun GamePlayScreen(
-    viewModel: GameViewModel,
-    onPauseClick: () -> Unit,
-    onGameOver: () -> Unit
+    viewModel: GameViewModel, onPauseClick: () -> Unit, onGameOver: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -73,8 +73,7 @@ fun GamePlayScreen(
         onGameOver = onGameOver,
         onReshuffle = { viewModel.reshuffleBlocks() },
         onUndo = { viewModel.undoMove() },
-        onBlockPlaced = { block, pos -> viewModel.onBlockPlaced(block, pos) }
-    )
+        onBlockPlaced = { block, pos -> viewModel.onBlockPlaced(block, pos) })
 }
 
 @Composable
@@ -107,8 +106,8 @@ fun GamePlayScreenContent(
         if (uiState.isGameOver) onGameOver()
     }
 
-    LaunchedEffect(uiState.isClearing) {
-        if (uiState.isClearing) {
+    LaunchedEffect(uiState.clearAnimationId) {
+        if (uiState.isClearing && uiState.clearAnimationId > 0L) {
             soundManager?.playVanish()
         }
     }
@@ -121,7 +120,7 @@ fun GamePlayScreenContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .safeDrawingPadding()
+                .safeContentPadding()
         ) {
             Row(
                 modifier = Modifier
@@ -146,6 +145,22 @@ fun GamePlayScreenContent(
                         fontWeight = FontWeight.ExtraBold
                     )
                 }
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    formatElapsedTime(elapsedSeconds),
+                    color = NeonCyan,
+                    fontFamily = RetroFont,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold
+                )
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
@@ -165,20 +180,6 @@ fun GamePlayScreenContent(
                 }
             }
 
-            // Timer display
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    formatElapsedTime(elapsedSeconds),
-                    color = NeonCyan,
-                    fontFamily = RetroFont,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -189,12 +190,13 @@ fun GamePlayScreenContent(
                     text = if (uiState.isWinConditionSkipped) {
                         "${uiState.playMode.name} GOAL SKIPPED"
                     } else {
-                        "${uiState.playMode.name} GOAL: ${uiState.targetScore}  WIN +${uiState.winTokenReward}"
+                        "${uiState.playMode.name} GOAL: ${uiState.targetScore}  \nWIN +${uiState.winTokenReward}"
                     },
                     color = NeonYellow,
                     fontFamily = RetroFont,
                     fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
                 )
             }
 
@@ -220,8 +222,7 @@ fun GamePlayScreenContent(
                         if (abs(gridCellSizePx - measuredCellSizePx) > 0.5f) {
                             gridCellSizePx = measuredCellSizePx
                         }
-                    }
-                )
+                    })
             }
 
             // Power Actions: Pause, Refresh, Undo
@@ -238,24 +239,21 @@ fun GamePlayScreenContent(
                     onClick = {
                         soundManager?.playClick()
                         onPauseClick()
-                    }
-                )
+                    })
                 PowerActionButton(
                     icon = { Icon(Icons.Default.Refresh, "Shuffle", tint = Color.White) },
                     cost = "25",
                     onClick = {
                         soundManager?.playClick()
                         onReshuffle()
-                    }
-                )
+                    })
                 PowerActionButton(
                     icon = { Icon(Icons.AutoMirrored.Filled.Undo, "Undo", tint = Color.White) },
                     cost = "10",
                     onClick = {
                         soundManager?.playClick()
                         onUndo()
-                    }
-                )
+                    })
             }
 
             // Available blocks
@@ -273,11 +271,7 @@ fun GamePlayScreenContent(
                 ) {
                     uiState.availableBlocks.forEach { block ->
                         Box(
-                            modifier = Modifier
-                                .size(90.dp)
-                                .background(Color(0xFF1A1A2E), CircleShape)
-                                .padding(8.dp),
-                            contentAlignment = Alignment.Center
+                            modifier = Modifier.size(90.dp), contentAlignment = Alignment.Center
                         ) {
                             BlockItem(
                                 block = block,
@@ -291,8 +285,7 @@ fun GamePlayScreenContent(
                                 },
                                 onPlace = { pos ->
                                     onBlockPlaced(block, pos)
-                                }
-                            )
+                                })
                         }
                     }
                 }
@@ -302,9 +295,7 @@ fun GamePlayScreenContent(
         // Floating overlay — renders the dragged block above ALL screen content
         if (draggedBlock != null && draggedOffset != null) {
             DraggedBlockOverlay(
-                block = draggedBlock!!,
-                offset = draggedOffset!!,
-                cellSize = previewCellSizePx
+                block = draggedBlock!!, offset = draggedOffset!!, cellSize = previewCellSizePx
             )
         }
     }
@@ -314,9 +305,11 @@ fun GamePlayScreenContent(
 @Composable
 fun GamePlayScreenPreview() {
     GameTheme {
+        val previewBlocks = ShapeLibrary.getPreviewBlocks().take(3)
         GamePlayScreenContent(
             uiState = GameUiState(
                 grid = GridState(size = 10),
+                availableBlocks = previewBlocks,
                 tokens = 100,
                 score = 500,
                 currentLevel = 1
@@ -325,20 +318,16 @@ fun GamePlayScreenPreview() {
             onGameOver = {},
             onReshuffle = {},
             onUndo = {},
-            onBlockPlaced = { _, _ -> }
-        )
+            onBlockPlaced = { _, _ -> })
     }
 }
 
 @Composable
 private fun PowerActionButton(
-    icon: @Composable () -> Unit,
-    cost: String,
-    onClick: () -> Unit
+    icon: @Composable () -> Unit, cost: String, onClick: () -> Unit
 ) {
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center
     ) {
         IconButton(
             onClick = onClick,

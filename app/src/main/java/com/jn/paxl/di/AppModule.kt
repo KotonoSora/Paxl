@@ -6,6 +6,8 @@ import com.jn.paxl.application.gameplay.PlaceBlockUseCase
 import com.jn.paxl.application.gameplay.ReshuffleBlocksUseCase
 import com.jn.paxl.application.gameplay.StartNewGameUseCase
 import com.jn.paxl.application.gameplay.UndoMoveUseCase
+import com.jn.paxl.application.shop.ObserveShopUiStateUseCase
+import com.jn.paxl.application.shop.ShopUseCases
 import com.jn.paxl.infrastructure.gameplay.ShapeLibraryBlockCatalog
 import com.jn.paxl.repository.BillingRepository
 import com.jn.paxl.repository.DataStoreRepository
@@ -44,6 +46,14 @@ object AppModule {
             placeBlock = PlaceBlockUseCase(catalog),
             undoMove = UndoMoveUseCase(),
             reshuffleBlocks = ReshuffleBlocksUseCase(catalog)
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideShopUseCases(): ShopUseCases {
+        return ShopUseCases(
+            observeShopUiState = ObserveShopUiStateUseCase()
         )
     }
 }

@@ -5,6 +5,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jn.paxl.application.gameplay.GameplayUseCases
+import com.jn.paxl.application.shop.ShopUseCases
+import com.jn.paxl.domain.shop.ShopUiState
 import com.jn.paxl.model.Block
 import com.jn.paxl.model.Coordinate
 import com.jn.paxl.model.GameUiState
@@ -12,14 +14,15 @@ import com.jn.paxl.model.LeaderboardEntry
 import com.jn.paxl.model.PlayMode
 import com.jn.paxl.repository.BillingRepository
 import com.jn.paxl.repository.DataStoreRepository
-import com.jn.paxl.repository.StoreProduct
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -28,7 +31,8 @@ import javax.inject.Inject
 class GameViewModel @Inject constructor(
     private val repository: DataStoreRepository,
     private val billingRepository: BillingRepository,
-    private val gameplayUseCases: GameplayUseCases
+    private val gameplayUseCases: GameplayUseCases,
+    shopUseCases: ShopUseCases
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(GameUiState())
@@ -37,7 +41,14 @@ class GameViewModel @Inject constructor(
     private val _leaderboard = MutableStateFlow<List<LeaderboardEntry>>(emptyList())
     val leaderboard: StateFlow<List<LeaderboardEntry>> = _leaderboard.asStateFlow()
 
-    val shopProducts: StateFlow<List<StoreProduct>> = billingRepository.products
+    val shopUiState: StateFlow<ShopUiState> = shopUseCases.observeShopUiState(
+        productsFlow = billingRepository.products,
+        billingStatusFlow = billingRepository.billingStatus
+    ).stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
+        initialValue = ShopUiState.Loading
+    )
 
     private val gridHistory = mutableListOf<Map<Coordinate, Color?>>()
 
@@ -84,7 +95,8 @@ class GameViewModel @Inject constructor(
         gridHistory.add(placeResult.previousGridSnapshot)
 
         var finalState = placeResult.newState
-        val reachedWinTarget = !finalState.isWinConditionSkipped && finalState.score >= finalState.targetScore
+        val reachedWinTarget =
+            !finalState.isWinConditionSkipped && finalState.score >= finalState.targetScore
         if (reachedWinTarget) {
             finalState = finalState.copy(
                 isGameOver = true,
@@ -195,8 +207,12 @@ class GameViewModel @Inject constructor(
         viewModelScope.launch { repository.saveMusicEnabled(enabled) }
     }
 
-    fun purchaseCoins(activity: Activity, product: StoreProduct) {
-        billingRepository.launchBillingFlow(activity, product)
+    fun purchaseCoinsByProductId(activity: Activity, productId: String) {
+        billingRepository.launchBillingFlowByProductId(activity, productId)
+    }
+
+    fun refreshShopProducts() {
+        billingRepository.refreshProducts()
     }
 
     override fun onCleared() {

@@ -68,8 +68,8 @@ class StartNewGameUseCaseTest {
         assertEquals(20, levels.winTokenReward)
 
         assertEquals(PlayMode.DAILY, daily.playMode)
-        assertEquals(2200, daily.targetScore)
-        assertEquals(40, daily.winTokenReward)
+        assertEquals(5000, daily.targetScore)
+        assertEquals(50, daily.winTokenReward)
     }
 }
 

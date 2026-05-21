@@ -28,17 +28,17 @@ fun PauseScreen(onResume: () -> Unit, onRestart: () -> Unit, onQuit: () -> Unit)
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundDark.copy(alpha = 0.8f))
+            .background(BackgroundDark.copy(alpha = 0.6f))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .safeDrawingPadding()
-                .padding(32.dp),
+                .padding(28.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            NeonTitle("PAUSED", color = NeonYellow, fontSize = 56)
+            NeonTitle("PAUSED", color = NeonYellow, fontSize = 48)
             Spacer(Modifier.height(48.dp))
 
             NeonButton(text = "RESUME", color = NeonGreen, onClick = onResume)

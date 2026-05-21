@@ -19,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.jn.paxl.model.LeaderboardEntry
@@ -38,26 +39,22 @@ fun LeaderboardScreen(viewModel: GameViewModel, onBack: () -> Unit) {
 
 @Composable
 private fun LeaderboardScreenContent(
-    leaderboard: List<LeaderboardEntry>,
-    onBack: () -> Unit
+    leaderboard: List<LeaderboardEntry>, onBack: () -> Unit
 ) {
 
     GameScreenScaffold {
         GameBackHeader(
-            title = "TOP SCORES",
-            titleColor = NeonBlue,
-            titleFontSize = 36,
-            onBack = onBack
+            title = "TOP SCORES", titleColor = NeonBlue, titleFontSize = 24, onBack = onBack
         )
 
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(24.dp))
 
         LeaderboardHeaderRow()
         Spacer(Modifier.height(12.dp))
 
         LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(bottom = 16.dp)
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            contentPadding = PaddingValues(bottom = 0.dp)
         ) {
             itemsIndexed(leaderboard) { index, entry ->
                 LeaderboardEntryRow(
@@ -76,8 +73,7 @@ private fun LeaderboardScreenContent(
                             .padding(16.dp)
                     ) {
                         Text(
-                            text = "No records yet",
-                            color = Color.White.copy(alpha = 0.8f)
+                            text = "No records yet", color = Color.White.copy(alpha = 0.8f)
                         )
                     }
                 }
@@ -95,19 +91,22 @@ fun LeaderboardScreenPreview() {
                 LeaderboardEntry(score = 15000, durationSeconds = 180, recordedAtEpochMs = 3),
                 LeaderboardEntry(score = 15000, durationSeconds = 200, recordedAtEpochMs = 2),
                 LeaderboardEntry(score = 12000, durationSeconds = 170, recordedAtEpochMs = 1)
-            ),
-            onBack = {}
-        )
+            ), onBack = {})
+    }
+}
+
+@Preview(showBackground = true, name = "Empty Leaderboard")
+@Composable
+fun LeaderboardScreenEmptyPreview() {
+    GameTheme {
+        LeaderboardScreenContent(leaderboard = emptyList(), onBack = {})
     }
 }
 
 @Composable
 private fun LeaderboardHeaderRow() {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        modifier = Modifier.fillMaxWidth()
     ) {
         Text(
             text = "RANK",
@@ -119,13 +118,14 @@ private fun LeaderboardHeaderRow() {
             text = "TIME",
             color = NeonBlue,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.weight(2f)
+            modifier = Modifier.weight(1.5f)
         )
         Text(
             text = "SCORE",
             color = NeonBlue,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.weight(2f)
+            modifier = Modifier.weight(1.5f),
+            textAlign = TextAlign.Right,
         )
     }
 }
@@ -149,13 +149,14 @@ private fun LeaderboardEntryRow(rank: Int, timeCount: String, score: Int) {
             text = timeCount,
             color = Color.White,
             fontWeight = FontWeight.Medium,
-            modifier = Modifier.weight(2f)
+            modifier = Modifier.weight(1.5f)
         )
         Text(
             text = score.toString(),
             color = NeonCyan,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.weight(2f)
+            modifier = Modifier.weight(1.5f),
+            textAlign = TextAlign.Right,
         )
     }
 }

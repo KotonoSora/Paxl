@@ -11,10 +11,15 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -23,6 +28,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -36,15 +42,19 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.jn.paxl.engine.GameEngine
 import com.jn.paxl.model.Block
 import com.jn.paxl.model.Coordinate
 import com.jn.paxl.model.GridState
+import com.jn.paxl.model.ShapeLibrary
+import com.jn.paxl.ui.theme.GameTheme
 import com.jn.paxl.ui.theme.NeonCyan
 import kotlinx.coroutines.launch
 import kotlin.math.floor
+import kotlin.math.min
 import kotlin.math.roundToInt
 
 @Composable
@@ -63,10 +73,8 @@ fun GameGrid(
         initialValue = 0.2f, // Increased from 0.1f
         targetValue = 0.5f, // Increased from 0.3f
         animationSpec = infiniteRepeatable(
-            animation = tween(1500, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "GlowAlpha"
+            animation = tween(1500, easing = LinearEasing), repeatMode = RepeatMode.Reverse
+        ), label = "GlowAlpha"
     )
     val vanishProgress by animateFloatAsState(
         targetValue = if (isClearing) 1f else 0f,
@@ -82,8 +90,7 @@ fun GameGrid(
             .onGloballyPositioned {
                 val measuredCellSize = it.size.width.toFloat() / gridState.size
                 onGridMeasured(it.positionInRoot(), measuredCellSize)
-            }
-    ) {
+            }) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val cellSizePx = size.width / gridState.size
 
@@ -266,57 +273,73 @@ fun BlockItem(
             .offset { IntOffset(dragOffset.x.roundToInt(), dragOffset.y.roundToInt()) }
             .scale(scaleAnim.value)
             .pointerInput(block.id) {
-                detectDragGestures(
-                    onDragStart = {
-                        scope.launch { scaleAnim.animateTo(1.2f) }
-                        onDragging(block, itemPosition + dragOffset)
-                    },
-                    onDragEnd = {
-                        if (gridCellSize <= 0f) {
-                            onDragging(null, null)
-                            dragOffset = Offset.Zero
-                            scope.launch { scaleAnim.animateTo(1f) }
-                            return@detectDragGestures
-                        }
-
-                        val dropPosition = itemPosition + dragOffset
-                        val relativeX = dropPosition.x - gridOffset.x
-                        val relativeY = dropPosition.y - gridOffset.y
-                        val gridX = floor(relativeX / gridCellSize).toInt()
-                        val gridY = floor(relativeY / gridCellSize).toInt()
-
-                        onPlace(Coordinate(gridX, gridY))
+                detectDragGestures(onDragStart = {
+                    scope.launch { scaleAnim.animateTo(1.2f) }
+                    onDragging(block, itemPosition + dragOffset)
+                }, onDragEnd = {
+                    if (gridCellSize <= 0f) {
                         onDragging(null, null)
                         dragOffset = Offset.Zero
                         scope.launch { scaleAnim.animateTo(1f) }
-                    },
-                    onDragCancel = {
-                        onDragging(null, null)
-                        dragOffset = Offset.Zero
-                        scope.launch { scaleAnim.animateTo(1f) }
-                    },
-                    onDrag = { change, dragAmount ->
-                        change.consume()
-                        dragOffset += dragAmount
-                        onDragging(block, itemPosition + dragOffset)
+                        return@detectDragGestures
                     }
-                )
-            }
-    ) {
+
+                    val dropPosition = itemPosition + dragOffset
+                    val relativeX = dropPosition.x - gridOffset.x
+                    val relativeY = dropPosition.y - gridOffset.y
+                    val gridX = floor(relativeX / gridCellSize).toInt()
+                    val gridY = floor(relativeY / gridCellSize).toInt()
+
+                    onPlace(Coordinate(gridX, gridY))
+                    onDragging(null, null)
+                    dragOffset = Offset.Zero
+                    scope.launch { scaleAnim.animateTo(1f) }
+                }, onDragCancel = {
+                    onDragging(null, null)
+                    dragOffset = Offset.Zero
+                    scope.launch { scaleAnim.animateTo(1f) }
+                }, onDrag = { change, dragAmount ->
+                    change.consume()
+                    dragOffset += dragAmount
+                    onDragging(block, itemPosition + dragOffset)
+                })
+            }) {
         val sizeDp = with(density) { (cellSize * 3).toDp() }
         Canvas(modifier = Modifier.size(sizeDp)) {
+            val minX = block.shape.minOfOrNull { it.x } ?: 0
+            val minY = block.shape.minOfOrNull { it.y } ?: 0
+            val maxX = block.shape.maxOfOrNull { it.x } ?: 0
+            val maxY = block.shape.maxOfOrNull { it.y } ?: 0
+            val shapeWidthCells = (maxX - minX + 1).coerceAtLeast(1)
+            val shapeHeightCells = (maxY - minY + 1).coerceAtLeast(1)
+
+            // Keep normal visual size, but scale down if a large shape would overflow this canvas.
+            val fitCellSize = min(size.width / shapeWidthCells, size.height / shapeHeightCells)
+            val drawCellSize = min(cellSize, fitCellSize)
+            val drawOrigin = Offset(
+                (size.width - shapeWidthCells * drawCellSize) / 2f - minX * drawCellSize,
+                (size.height - shapeHeightCells * drawCellSize) / 2f - minY * drawCellSize
+            )
+            val inset = min(2.dp.toPx(), drawCellSize * 0.2f)
+
             block.shape.forEach { coord ->
-                val topLeft = Offset(coord.x * cellSize, coord.y * cellSize)
+                val topLeft = Offset(
+                    coord.x * drawCellSize + drawOrigin.x,
+                    coord.y * drawCellSize + drawOrigin.y
+                )
                 drawRoundRect(
                     color = block.color,
                     topLeft = topLeft,
-                    size = Size(cellSize, cellSize),
+                    size = Size(drawCellSize, drawCellSize),
                     cornerRadius = CornerRadius(4.dp.toPx())
                 )
                 drawRoundRect(
                     color = Color.White.copy(alpha = 0.5f), // Increased from 0.3f
-                    topLeft = topLeft,
-                    size = Size(cellSize, cellSize),
+                    topLeft = topLeft.plus(Offset(inset, inset)),
+                    size = Size(
+                        (drawCellSize - (2 * inset)).coerceAtLeast(0f),
+                        (drawCellSize - (2 * inset)).coerceAtLeast(0f)
+                    ),
                     cornerRadius = CornerRadius(4.dp.toPx()),
                     style = Stroke(width = 1.5.dp.toPx()) // Slightly thicker
                 )
@@ -331,21 +354,21 @@ fun BlockItem(
  */
 @Composable
 fun DraggedBlockOverlay(
-    block: Block,
-    offset: Offset,
-    cellSize: Float
+    block: Block, offset: Offset, cellSize: Float
 ) {
     val density = LocalDensity.current
     val scaledCellSize = cellSize * 1.15f
     val sizeDp = with(density) { (scaledCellSize * 4).toDp() }
-
     Canvas(
         modifier = Modifier
             .size(sizeDp)
-            .offset { IntOffset(offset.x.roundToInt(), offset.y.roundToInt()) }
-    ) {
+            .offset { IntOffset(offset.x.roundToInt(), offset.y.roundToInt()) }) {
+
         block.shape.forEach { coord ->
-            val topLeft = Offset(coord.x * scaledCellSize, coord.y * scaledCellSize)
+            val topLeft = Offset(
+                coord.x * scaledCellSize,
+                coord.y * scaledCellSize,
+            )
             // Glow background
             drawRoundRect(
                 color = block.color.copy(alpha = 0.4f),
@@ -368,6 +391,74 @@ fun DraggedBlockOverlay(
                 cornerRadius = CornerRadius(4.dp.toPx()),
                 style = Stroke(width = 1.5.dp.toPx())
             )
+        }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF130730)
+@Composable
+private fun DraggedBlockOverlayAllShapesPreview() {
+    GameTheme {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFF130730))
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            ShapeLibrary.getPreviewBlocks().chunked(3).forEach { rowBlocks ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    rowBlocks.forEach { block ->
+                        Box(
+                            modifier = Modifier.size(90.dp), contentAlignment = Alignment.Center
+                        ) {
+                            DraggedBlockOverlay(
+                                block = block, offset = Offset.Zero, cellSize = 64f
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF130730)
+@Composable
+private fun BlockItemAllShapesPreview() {
+    GameTheme {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFF130730))
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            ShapeLibrary.getPreviewBlocks().chunked(3).forEach { rowBlocks ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    rowBlocks.forEach { block ->
+                        Box(
+                            modifier = Modifier.size(90.dp), contentAlignment = Alignment.Center
+                        ) {
+                            BlockItem(
+                                block = block,
+                                gridOffset = Offset.Zero,
+                                cellSize = 64f,
+                                gridCellSize = 64f,
+                                onDragging = { _, _ -> },
+                                onPlace = {}
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

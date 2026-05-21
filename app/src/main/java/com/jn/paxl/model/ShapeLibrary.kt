@@ -28,11 +28,7 @@ object ShapeLibrary {
         listOf(Coordinate(0, 0), Coordinate(1, 0), Coordinate(2, 0), Coordinate(1, 1)),
         // 3x3 L-Shape
         listOf(
-            Coordinate(0, 0),
-            Coordinate(0, 1),
-            Coordinate(0, 2),
-            Coordinate(1, 2),
-            Coordinate(2, 2)
+            Coordinate(0, 0), Coordinate(0, 1), Coordinate(0, 2), Coordinate(1, 2), Coordinate(2, 2)
         ),
         // 2x3 Rectangle
         listOf(
@@ -48,8 +44,25 @@ object ShapeLibrary {
     fun getRandomBlocks(count: Int): List<Block> {
         return (1..count).map {
             Block(
-                shape = shapes.random(),
-                color = blockColors.random()
+                shape = shapes.random(), color = blockColors.random()
+            )
+        }
+    }
+
+    @Suppress("unused")
+    fun getPreviewDraggedBlock(): Block {
+        return Block(
+            shape = shapes[5], color = blockColors[2], id = "dragged-block-overlay-preview"
+        )
+    }
+
+    @Suppress("unused")
+    fun getPreviewBlocks(): List<Block> {
+        return shapes.mapIndexed { index, shape ->
+            Block(
+                shape = shape,
+                color = blockColors[index % blockColors.size],
+                id = "preview-block-$index"
             )
         }
     }

@@ -22,13 +22,22 @@ import kotlinx.coroutines.launch
 
 data class StoreProduct(
     val productId: String,
+    val tokenAmount: Int,
     val title: String,
     val price: String,
     val originalDetails: ProductDetails? = null
 )
 
+enum class BillingStatus {
+    IDLE,
+    CONNECTING,
+    CONNECTED,
+    ERROR,
+    EMPTY,
+}
+
 class BillingRepository(
-    private val context: Context,
+    context: Context,
     private val dataStoreRepository: DataStoreRepository
 ) : PurchasesUpdatedListener {
 
@@ -46,6 +55,9 @@ class BillingRepository(
     private val _products = MutableStateFlow<List<StoreProduct>>(emptyList())
     val products: StateFlow<List<StoreProduct>> = _products.asStateFlow()
 
+    private val _billingStatus = MutableStateFlow(BillingStatus.IDLE)
+    val billingStatus: StateFlow<BillingStatus> = _billingStatus.asStateFlow()
+
     private val scope = CoroutineScope(Dispatchers.IO)
 
     init {
@@ -57,33 +69,39 @@ class BillingRepository(
     }
 
     private fun startConnection() {
+        _billingStatus.value = BillingStatus.CONNECTING
         billingClient.startConnection(object : BillingClientStateListener {
             override fun onBillingSetupFinished(billingResult: BillingResult) {
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                     queryProducts()
+                } else {
+                    _billingStatus.value = BillingStatus.ERROR
                 }
             }
 
             override fun onBillingServiceDisconnected() {
-                // Connection lost. Retrying...
+                _billingStatus.value = BillingStatus.ERROR
             }
         })
     }
 
     private fun queryProducts() {
+        _billingStatus.value = BillingStatus.CONNECTING
+
         if (isDebug) {
             val mockProducts = listOf(
-                StoreProduct("tokens_100", "100 Tokens", "$0.59"),
-                StoreProduct("tokens_500", "500 Tokens", "$0.79"),
-                StoreProduct("tokens_1000", "1000 Tokens", "$0.99"),
-                StoreProduct("tokens_1500", "1500 Tokens", "$1.89"),
-                StoreProduct("tokens_2000", "2000 Tokens", "$2.89"),
-                StoreProduct("tokens_2500", "2500 Tokens", "$3.89"),
-                StoreProduct("tokens_3000", "3000 Tokens", "$4.89"),
-                StoreProduct("tokens_3500", "3500 Tokens", "$5.89"),
-                StoreProduct("tokens_4000", "4000 Tokens", "$6.89")
+                StoreProduct("tokens_100", 100, "100 Tokens", "$0.59"),
+                StoreProduct("tokens_500", 500, "500 Tokens", "$0.79"),
+                StoreProduct("tokens_1000", 1000, "1000 Tokens", "$0.99"),
+                StoreProduct("tokens_1500", 1500, "1500 Tokens", "$1.89"),
+                StoreProduct("tokens_2000", 2000, "2000 Tokens", "$2.89"),
+                StoreProduct("tokens_2500", 2500, "2500 Tokens", "$3.89"),
+                StoreProduct("tokens_3000", 3000, "3000 Tokens", "$4.89"),
+                StoreProduct("tokens_3500", 3500, "3500 Tokens", "$5.89"),
+                StoreProduct("tokens_4000", 4000, "4000 Tokens", "$6.89")
             )
             _products.value = mockProducts
+            _billingStatus.value = BillingStatus.CONNECTED
             return
         }
 
@@ -105,18 +123,41 @@ class BillingRepository(
 
         billingClient.queryProductDetailsAsync(params) { billingResult, result ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                val sortedProducts = result.productDetailsList.sortedBy { product ->
-                    getCoinAmountFromId(product.productId)
-                }.map {
-                    StoreProduct(
-                        productId = it.productId,
-                        title = it.title,
-                        price = it.oneTimePurchaseOfferDetails?.formattedPrice ?: "Unknown",
-                        originalDetails = it
-                    )
-                }
+                val sortedProducts = result.productDetailsList
+                    .mapNotNull { details ->
+                        val tokenAmount = getCoinAmountFromId(details.productId)
+                        if (tokenAmount <= 0) return@mapNotNull null
+
+                        StoreProduct(
+                            productId = details.productId,
+                            tokenAmount = tokenAmount,
+                            title = "$tokenAmount Tokens",
+                            price = details.oneTimePurchaseOfferDetails?.formattedPrice
+                                ?: "Unknown",
+                            originalDetails = details
+                        )
+                    }
+                    .sortedBy { it.tokenAmount }
+
                 _products.value = sortedProducts
+                _billingStatus.value =
+                    if (sortedProducts.isEmpty()) BillingStatus.EMPTY else BillingStatus.CONNECTED
+            } else {
+                _billingStatus.value = BillingStatus.ERROR
             }
+        }
+    }
+
+    fun refreshProducts() {
+        if (isDebug) {
+            queryProducts()
+            return
+        }
+
+        if (billingClient.isReady) {
+            queryProducts()
+        } else {
+            startConnection()
         }
     }
 
@@ -139,6 +180,11 @@ class BillingRepository(
             .build()
 
         billingClient.launchBillingFlow(activity, billingFlowParams)
+    }
+
+    fun launchBillingFlowByProductId(activity: Activity, productId: String) {
+        val product = _products.value.firstOrNull { it.productId == productId } ?: return
+        launchBillingFlow(activity, product)
     }
 
     override fun onPurchasesUpdated(billingResult: BillingResult, purchases: List<Purchase>?) {
@@ -192,6 +238,7 @@ class BillingRepository(
     }
 
     fun endConnection() {
+        _billingStatus.value = BillingStatus.IDLE
         billingClient.endConnection()
     }
 }
