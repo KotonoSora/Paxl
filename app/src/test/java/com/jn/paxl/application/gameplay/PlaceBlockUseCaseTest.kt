@@ -7,7 +7,6 @@ import com.jn.paxl.model.Coordinate
 import com.jn.paxl.model.GameUiState
 import com.jn.paxl.model.GridState
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -101,7 +100,11 @@ class PlaceBlockUseCaseTest {
 
         val state = GameUiState(
             grid = GridState(cells = occupied, size = 10),
-            availableBlocks = listOf(oneCell, oneCell.copy(id = "other"), oneCell.copy(id = "other2")),
+            availableBlocks = listOf(
+                oneCell,
+                oneCell.copy(id = "other"),
+                oneCell.copy(id = "other2")
+            ),
             score = 0
         )
 
@@ -110,7 +113,9 @@ class PlaceBlockUseCaseTest {
         assertNotNull(result)
         val newState = result!!.newState
         assertEquals(110, newState.score)
-        assertFalse((0 until 10).any { x -> newState.grid.cells[Coordinate(x, 0)] != null })
+        assertTrue(newState.isClearing)
+        assertEquals(10, newState.clearingCells.size)
+        assertTrue((0 until 10).all { x -> newState.grid.cells[Coordinate(x, 0)] == null })
     }
 }
 

@@ -10,6 +10,7 @@ class SoundManager(context: Context) {
     private val soundPool: SoundPool
     private val placeSound: Int
     private val clearSound: Int
+    private val vanishSound: Int
     private val clickSound: Int
     private val winSound: Int
     private val loseSound: Int
@@ -29,6 +30,7 @@ class SoundManager(context: Context) {
 
         placeSound = loadSound(context, R.raw.place)
         clearSound = loadSound(context, R.raw.clear)
+        vanishSound = loadSound(context, R.raw.vanish)
         clickSound = loadSound(context, R.raw.click)
         winSound = loadSound(context, R.raw.win)
         loseSound = loadSound(context, R.raw.lose)
@@ -37,7 +39,7 @@ class SoundManager(context: Context) {
     private fun loadSound(context: Context, resId: Int): Int {
         return try {
             soundPool.load(context, resId, 1)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             -1
         }
     }
@@ -48,6 +50,10 @@ class SoundManager(context: Context) {
 
     fun playClear() {
         playSound(clearSound)
+    }
+
+    fun playVanish() {
+        playSound(vanishSound)
     }
 
     fun playClick() {

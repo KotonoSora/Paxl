@@ -24,29 +24,46 @@ import com.jn.paxl.ui.components.NeonButton
 import com.jn.paxl.ui.components.NeonText
 import com.jn.paxl.ui.components.NeonTitle
 import com.jn.paxl.ui.theme.BackgroundDark
+import com.jn.paxl.ui.theme.GameTheme
 import com.jn.paxl.ui.theme.NeonCyan
 import com.jn.paxl.ui.theme.NeonGreen
 import com.jn.paxl.ui.theme.NeonPink
-import com.jn.paxl.ui.theme.PaxlTheme
+import com.jn.paxl.ui.theme.NeonYellow
 import com.jn.paxl.viewmodel.GameViewModel
 
 @Composable
-fun ResultScreen(viewModel: GameViewModel, onPlayAgain: () -> Unit, onHome: () -> Unit) {
+fun ResultScreen(
+    viewModel: GameViewModel,
+    onContinue: () -> Unit,
+    onPlayAgain: () -> Unit,
+    onHome: () -> Unit
+) {
     val uiState by viewModel.uiState.collectAsState()
 
     ResultScreenContent(
         uiState = uiState,
+        onContinue = onContinue,
         onPlayAgain = onPlayAgain,
         onHome = onHome
     )
 }
 
 @Composable
-fun ResultScreenContent(uiState: GameUiState, onPlayAgain: () -> Unit, onHome: () -> Unit) {
+fun ResultScreenContent(
+    uiState: GameUiState,
+    onContinue: () -> Unit,
+    onPlayAgain: () -> Unit,
+    onHome: () -> Unit
+) {
     val soundManager = LocalSoundManager.current
+    val canContinue = uiState.isWin || uiState.tokens >= uiState.continueTokenCost
 
-    LaunchedEffect(Unit) {
-        soundManager?.playLose()
+    LaunchedEffect(uiState.isWin) {
+        if (uiState.isWin) {
+            soundManager?.playWin()
+        } else {
+            soundManager?.playLose()
+        }
     }
 
     Box(
@@ -62,10 +79,42 @@ fun ResultScreenContent(uiState: GameUiState, onPlayAgain: () -> Unit, onHome: (
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            NeonTitle("GAME OVER", color = NeonPink, fontSize = 56)
+            NeonTitle(
+                if (uiState.isWin) "YOU WIN" else "GAME OVER",
+                color = if (uiState.isWin) NeonGreen else NeonPink,
+                fontSize = 56
+            )
             Spacer(Modifier.height(24.dp))
             NeonText("SCORE: ${uiState.score}", color = Color.White, fontSize = 32)
+            if (uiState.isWin) {
+                Spacer(Modifier.height(12.dp))
+                NeonText(
+                    "REWARD: +${uiState.winTokenReward} TOKENS",
+                    color = NeonYellow,
+                    fontSize = 20
+                )
+            }
             Spacer(Modifier.height(48.dp))
+
+            if (!uiState.isWin) {
+                NeonText(
+                    text = "CONTINUE COST: ${uiState.continueTokenCost} TOKENS",
+                    color = if (canContinue) NeonYellow else NeonPink,
+                    fontSize = 16
+                )
+                Spacer(Modifier.height(8.dp))
+            }
+
+            NeonButton(
+                text = if (uiState.isWin) "CONTINUE PLAY" else "CONTINUE",
+                color = NeonYellow,
+                enabled = canContinue,
+                onClick = {
+                    soundManager?.playClick()
+                    onContinue()
+                }
+            )
+            Spacer(Modifier.height(16.dp))
 
             NeonButton(
                 text = "PLAY AGAIN",
@@ -91,9 +140,10 @@ fun ResultScreenContent(uiState: GameUiState, onPlayAgain: () -> Unit, onHome: (
 @Preview(showBackground = true)
 @Composable
 fun ResultScreenPreview() {
-    PaxlTheme {
+    GameTheme {
         ResultScreenContent(
             uiState = GameUiState(score = 1234),
+            onContinue = {},
             onPlayAgain = {},
             onHome = {}
         )

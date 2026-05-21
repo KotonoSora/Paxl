@@ -9,6 +9,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.jn.paxl.model.PlayMode
 import com.jn.paxl.ui.screens.CoinShopScreen
 import com.jn.paxl.ui.screens.DailyChallengeScreen
 import com.jn.paxl.ui.screens.GamePlayScreen
@@ -59,7 +60,7 @@ fun GameNavigation(viewModel: GameViewModel = viewModel()) {
             composable(Screen.ModeSelect.route) {
                 ModeSelectScreen(
                     onModeSelected = {
-                        viewModel.startNewGame()
+                        viewModel.startNewGame(mode = PlayMode.CLASSIC)
                         navController.navigate(Screen.GamePlay.route)
                     },
                     onLevelSelectClick = { navController.navigate(Screen.LevelSelect.route) },
@@ -69,7 +70,7 @@ fun GameNavigation(viewModel: GameViewModel = viewModel()) {
             composable(Screen.LevelSelect.route) {
                 LevelSelectScreen(
                     onLevelSelected = { selectedLevel ->
-                        viewModel.startNewGame(selectedLevel)
+                        viewModel.startNewGame(level = selectedLevel, mode = PlayMode.LEVELS)
                         navController.navigate(Screen.GamePlay.route)
                     },
                     onBack = { navController.popBackStack() }
@@ -99,6 +100,10 @@ fun GameNavigation(viewModel: GameViewModel = viewModel()) {
             composable(Screen.Result.route) {
                 ResultScreen(
                     viewModel = viewModel,
+                    onContinue = {
+                        viewModel.continuePlayAfterGameOver()
+                        navController.popBackStack()
+                    },
                     onPlayAgain = {
                         viewModel.startNewGame()
                         navController.navigate(Screen.GamePlay.route) {
@@ -126,6 +131,7 @@ fun GameNavigation(viewModel: GameViewModel = viewModel()) {
                     viewModel = viewModel,
                     onBack = { navController.popBackStack() },
                     onStartChallenge = {
+                        viewModel.startNewGame(mode = PlayMode.DAILY)
                         navController.navigate(Screen.GamePlay.route) {
                             popUpTo(Screen.Home.route)
                         }
@@ -133,7 +139,10 @@ fun GameNavigation(viewModel: GameViewModel = viewModel()) {
                 )
             }
             composable(Screen.Leaderboard.route) {
-                LeaderboardScreen(onBack = { navController.popBackStack() })
+                LeaderboardScreen(
+                    viewModel,
+                    onBack = { navController.popBackStack() }
+                )
             }
         }
     }

@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -27,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -49,9 +50,11 @@ fun NeonButton(
     color: Color,
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
+    enabled: Boolean = true,
     onClick: () -> Unit
 ) {
     val shape = RoundedCornerShape(50)
+    val contentAlpha = if (enabled) 1f else 0.45f
 
     Box(
         modifier = modifier
@@ -63,19 +66,18 @@ fun NeonButton(
             modifier = Modifier
                 .fillMaxSize()
                 .clip(shape)
+                .alpha(contentAlpha)
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color.Black.copy(alpha = 0.8f),
-                            Color.Black.copy(alpha = 0.95f)
+                            Color.Black.copy(alpha = 0.8f), Color.Black.copy(alpha = 0.95f)
                         )
                     )
                 )
                 .border(2.dp, color, shape)
-                .clickable { onClick() }
+                .clickable(enabled = enabled) { onClick() }
                 .padding(horizontal = 24.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+            verticalAlignment = Alignment.CenterVertically) {
             if (icon != null) {
                 Icon(
                     imageVector = icon,
@@ -92,8 +94,7 @@ fun NeonButton(
                 fontFamily = RetroFont,
                 style = TextStyle(
                     shadow = Shadow(
-                        color = color.copy(alpha = 0.7f),
-                        blurRadius = 12f
+                        color = color.copy(alpha = 0.7f), blurRadius = 12f
                     )
                 )
             )
@@ -103,10 +104,7 @@ fun NeonButton(
 
 @Composable
 fun NeonTitle(
-    text: String,
-    color: Color,
-    modifier: Modifier = Modifier,
-    fontSize: Int = 48
+    text: String, color: Color, modifier: Modifier = Modifier, fontSize: Int = 48
 ) {
     Text(
         text = text,
@@ -118,10 +116,8 @@ fun NeonTitle(
         textAlign = TextAlign.Center,
         style = TextStyle(
             shadow = Shadow(
-                color = color,
-                blurRadius = 20f
-            ),
-            letterSpacing = 2.sp
+                color = color, blurRadius = 20f
+            ), letterSpacing = 2.sp
         )
     )
 }
@@ -146,15 +142,14 @@ fun NeonText(
         lineHeight = (fontSize * 1.5).sp,
         style = TextStyle(
             shadow = Shadow(
-                color = color.copy(alpha = 0.5f),
-                blurRadius = 8f
+                color = color.copy(alpha = 0.5f), blurRadius = 8f
             )
         )
     )
 }
 
 @Composable
-fun PaxlScreenScaffold(
+fun GameScreenScaffold(
     modifier: Modifier = Modifier,
     contentPadding: Dp = 24.dp,
     scrollable: Boolean = false,
@@ -163,17 +158,16 @@ fun PaxlScreenScaffold(
     Box(
         modifier = modifier
             .fillMaxSize()
+            .safeContentPadding()
             .background(BackgroundDark)
     ) {
         val contentModifier = Modifier
             .fillMaxSize()
-            .safeDrawingPadding()
-            .padding(contentPadding)
+            .padding(horizontal = contentPadding)
 
         if (scrollable) {
             Column(
-                modifier = contentModifier.verticalScroll(rememberScrollState()),
-                content = content
+                modifier = contentModifier.verticalScroll(rememberScrollState()), content = content
             )
         } else {
             Column(modifier = contentModifier, content = content)
@@ -182,7 +176,7 @@ fun PaxlScreenScaffold(
 }
 
 @Composable
-fun PaxlBackHeader(
+fun GameBackHeader(
     title: String,
     titleColor: Color,
     titleFontSize: Int,
@@ -193,13 +187,13 @@ fun PaxlBackHeader(
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(onClick = onBack) {
             Icon(
                 Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Back",
-                tint = Color.White
+                tint = Color.White,
             )
         }
         Spacer(Modifier.width(horizontalSpacing))

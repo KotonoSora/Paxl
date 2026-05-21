@@ -8,7 +8,8 @@ import com.jn.paxl.model.GameUiState
 
 data class PlaceBlockResult(
     val newState: GameUiState,
-    val previousGridSnapshot: Map<Coordinate, androidx.compose.ui.graphics.Color?>
+    val previousGridSnapshot: Map<Coordinate, androidx.compose.ui.graphics.Color?>,
+    val clearInfo: GameRules.LineClearInfo? = null
 )
 
 class PlaceBlockUseCase(private val blockCatalog: BlockCatalog) {
@@ -28,26 +29,36 @@ class PlaceBlockUseCase(private val blockCatalog: BlockCatalog) {
             currentCells[target] = block.color
         }
 
-        val (newCells, linesCleared) = GameRules.clearLines(currentCells, grid.size)
+        val lineClearInfo = GameRules.findLineClearInfo(currentCells, grid.size)
+        val linesCleared = lineClearInfo?.linesCleared ?: 0
+        val placedCells = currentCells.toMap()
+        val clearedCells =
+            lineClearInfo?.let { GameRules.clearCells(placedCells, it.cellsToClear) } ?: placedCells
 
         val newAvailableBlocks = currentState.availableBlocks.filter { it.id != block.id }.let {
             if (it.isEmpty()) blockCatalog.randomBlocks(3) else it
         }
 
         val newScore = currentState.score + (block.shape.size * 10) + (linesCleared * 100)
+        val isClearing = lineClearInfo != null
+        val clearingCells =
+            lineClearInfo?.cellsToClear.orEmpty().associateWith { coord -> placedCells[coord] }
 
         val updatedState = currentState.copy(
-            grid = currentState.grid.copy(cells = newCells),
+            grid = currentState.grid.copy(cells = clearedCells),
             availableBlocks = newAvailableBlocks,
             score = newScore,
             isGameOver = GameRules.checkGameOver(
-                newCells,
+                clearedCells,
                 newAvailableBlocks,
                 currentState.grid.size
-            )
+            ),
+            isClearing = isClearing,
+            clearAnimationId = if (isClearing) currentState.clearAnimationId + 1 else currentState.clearAnimationId,
+            clearingCells = clearingCells
         )
 
-        return PlaceBlockResult(updatedState, previousCells)
+        return PlaceBlockResult(updatedState, previousCells, lineClearInfo)
     }
 }
 

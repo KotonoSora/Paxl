@@ -28,7 +28,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -48,13 +47,14 @@ import com.jn.paxl.model.GameUiState
 import com.jn.paxl.model.GridState
 import com.jn.paxl.ui.LocalSoundManager
 import com.jn.paxl.ui.components.BlockItem
+import com.jn.paxl.ui.components.DraggedBlockOverlay
 import com.jn.paxl.ui.components.GameGrid
 import com.jn.paxl.ui.components.RetroFont
 import com.jn.paxl.ui.theme.BackgroundDark
+import com.jn.paxl.ui.theme.GameTheme
 import com.jn.paxl.ui.theme.NeonCyan
 import com.jn.paxl.ui.theme.NeonGreen
 import com.jn.paxl.ui.theme.NeonYellow
-import com.jn.paxl.ui.theme.PaxlTheme
 import com.jn.paxl.viewmodel.GameViewModel
 import kotlinx.coroutines.delay
 import kotlin.math.abs
@@ -91,25 +91,26 @@ fun GamePlayScreenContent(
     var draggedOffset by remember { mutableStateOf<Offset?>(null) }
     var gridOffset by remember { mutableStateOf(Offset.Zero) }
     var gridCellSizePx by remember { mutableFloatStateOf(0f) }
-    var sessionStartMs by remember { mutableLongStateOf(System.currentTimeMillis()) }
     val density = LocalDensity.current
 
     val previewCellSizePx = with(density) { 24.dp.toPx() }
-    val elapsedSeconds by produceState(initialValue = 0L, key1 = sessionStartMs) {
+    val elapsedSeconds by produceState(initialValue = 0L, key1 = uiState.sessionStartMs) {
         while (true) {
-            value = ((System.currentTimeMillis() - sessionStartMs) / 1000L).coerceAtLeast(0L)
+            value =
+                ((System.currentTimeMillis() - uiState.sessionStartMs) / 1000L).coerceAtLeast(0L)
             delay(1000)
         }
     }
 
-    LaunchedEffect(uiState.score) {
-        if (uiState.score == 0 && !uiState.isGameOver) {
-            sessionStartMs = System.currentTimeMillis()
-        }
-    }
 
     LaunchedEffect(uiState.isGameOver) {
         if (uiState.isGameOver) onGameOver()
+    }
+
+    LaunchedEffect(uiState.isClearing) {
+        if (uiState.isClearing) {
+            soundManager?.playVanish()
+        }
     }
 
     Box(
@@ -122,7 +123,6 @@ fun GamePlayScreenContent(
                 .fillMaxSize()
                 .safeDrawingPadding()
         ) {
-            // Header: Level, Score and Coins
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -150,13 +150,13 @@ fun GamePlayScreenContent(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         Icons.Default.MonetizationOn,
-                        contentDescription = "Coins",
+                        contentDescription = "Tokens",
                         tint = NeonYellow,
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(Modifier.width(4.dp))
                     Text(
-                        "${uiState.coins}",
+                        "${uiState.tokens}",
                         color = NeonYellow,
                         fontFamily = RetroFont,
                         fontSize = 20.sp,
@@ -179,6 +179,25 @@ fun GamePlayScreenContent(
                 )
             }
 
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = if (uiState.isWinConditionSkipped) {
+                        "${uiState.playMode.name} GOAL SKIPPED"
+                    } else {
+                        "${uiState.playMode.name} GOAL: ${uiState.targetScore}  WIN +${uiState.winTokenReward}"
+                    },
+                    color = NeonYellow,
+                    fontFamily = RetroFont,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
             Spacer(Modifier.height(16.dp))
 
             // Game Grid Area
@@ -193,6 +212,8 @@ fun GamePlayScreenContent(
                     gridState = uiState.grid,
                     draggedBlock = draggedBlock,
                     draggedOffset = draggedOffset,
+                    isClearing = uiState.isClearing,
+                    clearingCells = uiState.clearingCells,
                     gridOffset = gridOffset,
                     onGridMeasured = { offset, measuredCellSizePx ->
                         if (gridOffset != offset) gridOffset = offset
@@ -263,12 +284,12 @@ fun GamePlayScreenContent(
                                 gridOffset = gridOffset,
                                 cellSize = previewCellSizePx,
                                 gridCellSize = gridCellSizePx,
+                                isBeingDragged = draggedBlock?.id == block.id,
                                 onDragging = { b, offset ->
                                     draggedBlock = b
                                     draggedOffset = offset
                                 },
                                 onPlace = { pos ->
-                                    soundManager?.playPlace()
                                     onBlockPlaced(block, pos)
                                 }
                             )
@@ -277,17 +298,26 @@ fun GamePlayScreenContent(
                 }
             }
         }
+
+        // Floating overlay — renders the dragged block above ALL screen content
+        if (draggedBlock != null && draggedOffset != null) {
+            DraggedBlockOverlay(
+                block = draggedBlock!!,
+                offset = draggedOffset!!,
+                cellSize = previewCellSizePx
+            )
+        }
     }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun GamePlayScreenPreview() {
-    PaxlTheme {
+    GameTheme {
         GamePlayScreenContent(
             uiState = GameUiState(
                 grid = GridState(size = 10),
-                coins = 100,
+                tokens = 100,
                 score = 500,
                 currentLevel = 1
             ),

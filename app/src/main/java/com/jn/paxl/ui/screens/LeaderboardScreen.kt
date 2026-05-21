@@ -2,6 +2,7 @@ package com.jn.paxl.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,30 +14,36 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.jn.paxl.ui.components.PaxlBackHeader
-import com.jn.paxl.ui.components.PaxlScreenScaffold
+import com.jn.paxl.model.LeaderboardEntry
+import com.jn.paxl.ui.components.GameBackHeader
+import com.jn.paxl.ui.components.GameScreenScaffold
+import com.jn.paxl.ui.theme.GameTheme
 import com.jn.paxl.ui.theme.NeonBlue
 import com.jn.paxl.ui.theme.NeonCyan
-import com.jn.paxl.ui.theme.PaxlTheme
 import com.jn.paxl.ui.theme.SurfaceDark
+import com.jn.paxl.viewmodel.GameViewModel
 
 @Composable
-fun LeaderboardScreen(onBack: () -> Unit) {
-    val mockLeaderboard = listOf(
-        "Player One" to 15000,
-        "MasterBlaster" to 12400,
-        "NeonKing" to 11000,
-        "PaxlPro" to 9500,
-        "StarDust" to 8200
-    )
+fun LeaderboardScreen(viewModel: GameViewModel, onBack: () -> Unit) {
+    val leaderboard by viewModel.leaderboard.collectAsState()
+    LeaderboardScreenContent(leaderboard = leaderboard, onBack = onBack)
+}
 
-    PaxlScreenScaffold {
-        PaxlBackHeader(
+@Composable
+private fun LeaderboardScreenContent(
+    leaderboard: List<LeaderboardEntry>,
+    onBack: () -> Unit
+) {
+
+    GameScreenScaffold {
+        GameBackHeader(
             title = "TOP SCORES",
             titleColor = NeonBlue,
             titleFontSize = 36,
@@ -45,12 +52,35 @@ fun LeaderboardScreen(onBack: () -> Unit) {
 
         Spacer(Modifier.height(32.dp))
 
+        LeaderboardHeaderRow()
+        Spacer(Modifier.height(12.dp))
+
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(bottom = 16.dp)
         ) {
-            itemsIndexed(mockLeaderboard) { index, entry ->
-                LeaderboardEntryRow(rank = index + 1, name = entry.first, score = entry.second)
+            itemsIndexed(leaderboard) { index, entry ->
+                LeaderboardEntryRow(
+                    rank = index + 1,
+                    timeCount = formatElapsedTime(entry.durationSeconds),
+                    score = entry.score
+                )
+            }
+
+            if (leaderboard.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(SurfaceDark, RoundedCornerShape(8.dp))
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            text = "No records yet",
+                            color = Color.White.copy(alpha = 0.8f)
+                        )
+                    }
+                }
             }
         }
     }
@@ -59,25 +89,80 @@ fun LeaderboardScreen(onBack: () -> Unit) {
 @Preview(showBackground = true)
 @Composable
 fun LeaderboardScreenPreview() {
-    PaxlTheme {
-        LeaderboardScreen(onBack = {})
+    GameTheme {
+        LeaderboardScreenContent(
+            leaderboard = listOf(
+                LeaderboardEntry(score = 15000, durationSeconds = 180, recordedAtEpochMs = 3),
+                LeaderboardEntry(score = 15000, durationSeconds = 200, recordedAtEpochMs = 2),
+                LeaderboardEntry(score = 12000, durationSeconds = 170, recordedAtEpochMs = 1)
+            ),
+            onBack = {}
+        )
     }
 }
 
 @Composable
-private fun LeaderboardEntryRow(rank: Int, name: String, score: Int) {
+private fun LeaderboardHeaderRow() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = "RANK",
+            color = NeonBlue,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = "TIME",
+            color = NeonBlue,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.weight(2f)
+        )
+        Text(
+            text = "SCORE",
+            color = NeonBlue,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.weight(2f)
+        )
+    }
+}
+
+@Composable
+private fun LeaderboardEntryRow(rank: Int, timeCount: String, score: Int) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(SurfaceDark, RoundedCornerShape(8.dp))
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            "$rank. $name",
+            text = rank.toString(),
             color = Color.White,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.weight(1f)
         )
-        Text("$score", color = NeonCyan, fontWeight = FontWeight.Bold)
+        Text(
+            text = timeCount,
+            color = Color.White,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.weight(2f)
+        )
+        Text(
+            text = score.toString(),
+            color = NeonCyan,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.weight(2f)
+        )
     }
 }
+
+private fun formatElapsedTime(totalSeconds: Long): String {
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    return "%02d:%02d".format(minutes, seconds)
+}
+

@@ -8,11 +8,11 @@ class ReshuffleBlocksUseCase(
     private val reshuffleCost: Int = 25
 ) {
     operator fun invoke(currentState: GameUiState): GameUiState {
-        if (currentState.coins < reshuffleCost) return currentState
+        if (currentState.tokens < reshuffleCost) return currentState
 
         return currentState.copy(
             availableBlocks = blockCatalog.randomBlocks(3),
-            coins = currentState.coins - reshuffleCost
+            tokens = currentState.tokens - reshuffleCost
         )
     }
 }

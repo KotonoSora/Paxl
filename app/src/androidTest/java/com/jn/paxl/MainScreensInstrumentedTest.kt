@@ -24,13 +24,14 @@ class PaxlAppInstrumentedTest {
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
         val applicationClass = appContext.applicationInfo.className
 
-        assertEquals("com.jn.paxl.PaxlApplication", applicationClass)
+        assertEquals("com.jn.paxl.GameApplication", applicationClass)
     }
 
     @Test
     fun launch_intent_resolves_main_activity() {
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        val launchIntent = appContext.packageManager.getLaunchIntentForPackage(appContext.packageName)
+        val launchIntent =
+            appContext.packageManager.getLaunchIntentForPackage(appContext.packageName)
 
         assertNotNull(launchIntent)
         assertEquals("com.jn.paxl.MainActivity", launchIntent?.component?.className)

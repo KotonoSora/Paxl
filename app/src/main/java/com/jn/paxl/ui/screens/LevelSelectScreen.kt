@@ -16,11 +16,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.jn.paxl.ui.components.PaxlBackHeader
-import com.jn.paxl.ui.components.PaxlScreenScaffold
+import com.jn.paxl.ui.components.GameBackHeader
+import com.jn.paxl.ui.components.GameScreenScaffold
+import com.jn.paxl.ui.theme.GameTheme
 import com.jn.paxl.ui.theme.NeonCyan
 import com.jn.paxl.ui.theme.NeonPink
-import com.jn.paxl.ui.theme.PaxlTheme
 import com.jn.paxl.ui.theme.SurfaceDark
 
 @Composable
@@ -28,8 +28,8 @@ fun LevelSelectScreen(
     onLevelSelected: (Int) -> Unit,
     onBack: () -> Unit
 ) {
-    PaxlScreenScaffold {
-        PaxlBackHeader(
+    GameScreenScaffold {
+        GameBackHeader(
             title = "LEVELS",
             titleColor = NeonPink,
             titleFontSize = 40,
@@ -55,7 +55,7 @@ fun LevelSelectScreen(
 @Preview(showBackground = true)
 @Composable
 fun LevelSelectScreenPreview() {
-    PaxlTheme {
+    GameTheme {
         LevelSelectScreen(onLevelSelected = {}, onBack = {})
     }
 }

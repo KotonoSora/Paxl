@@ -73,15 +73,15 @@ class BillingRepository(
     private fun queryProducts() {
         if (isDebug) {
             val mockProducts = listOf(
-                StoreProduct("tokens_100", "100 Coins", "$0.59"),
-                StoreProduct("tokens_500", "500 Coins", "$0.79"),
-                StoreProduct("tokens_1000", "1000 Coins", "$0.99"),
-                StoreProduct("tokens_1500", "1500 Coins", "$1.89"),
-                StoreProduct("tokens_2000", "2000 Coins", "$2.89"),
-                StoreProduct("tokens_2500", "2500 Coins", "$3.89"),
-                StoreProduct("tokens_3000", "3000 Coins", "$4.89"),
-                StoreProduct("tokens_3500", "3500 Coins", "$5.89"),
-                StoreProduct("tokens_4000", "4000 Coins", "$6.89")
+                StoreProduct("tokens_100", "100 Tokens", "$0.59"),
+                StoreProduct("tokens_500", "500 Tokens", "$0.79"),
+                StoreProduct("tokens_1000", "1000 Tokens", "$0.99"),
+                StoreProduct("tokens_1500", "1500 Tokens", "$1.89"),
+                StoreProduct("tokens_2000", "2000 Tokens", "$2.89"),
+                StoreProduct("tokens_2500", "2500 Tokens", "$3.89"),
+                StoreProduct("tokens_3000", "3000 Tokens", "$4.89"),
+                StoreProduct("tokens_3500", "3500 Tokens", "$5.89"),
+                StoreProduct("tokens_4000", "4000 Tokens", "$6.89")
             )
             _products.value = mockProducts
             return

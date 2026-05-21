@@ -19,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -69,6 +70,7 @@ class GameViewModelTest {
         // Mock flows
         every { dataStoreRepository.coinsFlow } returns flowOf(100)
         every { dataStoreRepository.highScoreFlow } returns flowOf(0)
+        every { dataStoreRepository.leaderboardFlow } returns flowOf(emptyList())
         every { dataStoreRepository.soundEnabledFlow } returns flowOf(true)
         every { dataStoreRepository.musicEnabledFlow } returns flowOf(true)
 
@@ -124,10 +126,18 @@ class GameViewModelTest {
 
         val state = viewModel.uiState.value
         assertEquals(scoreBeforeClear + 110, state.score)
-
+        assertTrue(state.isClearing)
         for (x in 0 until 10) {
             assertNull(state.grid.cells[Coordinate(x, 0)])
         }
+
+        advanceTimeBy(1000)
+        advanceUntilIdle()
+
+        val clearedState = viewModel.uiState.value
+        assertFalse(clearedState.isClearing)
+
+        assertTrue(clearedState.clearingCells.isEmpty())
     }
 
 
@@ -142,7 +152,7 @@ class GameViewModelTest {
         viewModel.undoMove()
 
         assertNull(viewModel.uiState.value.grid.cells[Coordinate(0, 0)])
-        assertEquals(90, viewModel.uiState.value.coins)
+        assertEquals(90, viewModel.uiState.value.tokens)
 
         advanceUntilIdle()
         coVerify(exactly = 1) { dataStoreRepository.saveCoins(90) }
@@ -157,21 +167,21 @@ class GameViewModelTest {
         val after = viewModel.uiState.value
 
         assertEquals(before.grid.cells, after.grid.cells)
-        assertEquals(before.coins, after.coins)
+        assertEquals(before.tokens, after.tokens)
 
         advanceUntilIdle()
         coVerify(exactly = 0) { dataStoreRepository.saveCoins(any()) }
     }
 
     @Test
-    fun `reshuffle deducts coins and saves when balance is sufficient`() = runTest {
+    fun `reshuffle deducts tokens and saves when balance is sufficient`() = runTest {
         advanceUntilIdle()
 
         val beforeIds = viewModel.uiState.value.availableBlocks.map { it.id }
         viewModel.reshuffleBlocks()
         val after = viewModel.uiState.value
 
-        assertEquals(75, after.coins)
+        assertEquals(75, after.tokens)
         assertEquals(3, after.availableBlocks.size)
         assertTrue(after.availableBlocks.map { it.id } != beforeIds)
 
@@ -194,6 +204,106 @@ class GameViewModelTest {
         viewModel.undoMove()
         val afterUndo = viewModel.uiState.value
         assertTrue(afterUndo.grid.cells.isEmpty())
-        assertEquals(afterStart.coins, afterUndo.coins)
+        assertEquals(afterStart.tokens, afterUndo.tokens)
+    }
+
+    @Test
+    fun `continue play keeps score and timer but resets board and blocks`() = runTest {
+        advanceUntilIdle()
+
+        val beforeContinue = viewModel.uiState.value.copy(
+            grid = viewModel.uiState.value.grid.copy(cells = mapOf(Coordinate(0, 0) to Color.Red)),
+            score = 840,
+            tokens = 100,
+            isGameOver = true,
+            isWin = false,
+            sessionStartMs = 12345L,
+            availableBlocks = listOf(singleCellBlock)
+        )
+
+        val field = GameViewModel::class.java.getDeclaredField("_uiState")
+        field.isAccessible = true
+        @Suppress("UNCHECKED_CAST")
+        val stateFlow = field.get(viewModel) as kotlinx.coroutines.flow.MutableStateFlow<com.jn.paxl.model.GameUiState>
+        stateFlow.value = beforeContinue
+
+        viewModel.continuePlayAfterGameOver()
+
+        val continued = viewModel.uiState.value
+        assertFalse(continued.isGameOver)
+        assertFalse(continued.isWin)
+        assertEquals(840, continued.score)
+        assertEquals(70, continued.tokens)
+        assertEquals(12345L, continued.sessionStartMs)
+        assertTrue(continued.grid.cells.isEmpty())
+        assertEquals(3, continued.availableBlocks.size)
+
+        advanceUntilIdle()
+        coVerify(exactly = 1) { dataStoreRepository.saveCoins(70) }
+    }
+
+    @Test
+    fun `continue play does nothing when tokens are insufficient`() = runTest {
+        advanceUntilIdle()
+
+        val beforeContinue = viewModel.uiState.value.copy(
+            grid = viewModel.uiState.value.grid.copy(cells = mapOf(Coordinate(0, 0) to Color.Red)),
+            score = 500,
+            tokens = 20,
+            isGameOver = true,
+            isWin = false,
+            sessionStartMs = 5678L,
+            availableBlocks = listOf(singleCellBlock)
+        )
+
+        val field = GameViewModel::class.java.getDeclaredField("_uiState")
+        field.isAccessible = true
+        @Suppress("UNCHECKED_CAST")
+        val stateFlow = field.get(viewModel) as kotlinx.coroutines.flow.MutableStateFlow<com.jn.paxl.model.GameUiState>
+        stateFlow.value = beforeContinue
+
+        viewModel.continuePlayAfterGameOver()
+
+        val after = viewModel.uiState.value
+        assertEquals(beforeContinue, after)
+
+        advanceUntilIdle()
+        coVerify(exactly = 0) { dataStoreRepository.saveCoins(any()) }
+    }
+
+    @Test
+    fun `continue after win keeps current board and skips win condition`() = runTest {
+        advanceUntilIdle()
+
+        val currentGrid = mapOf(Coordinate(0, 0) to Color.Red, Coordinate(1, 1) to Color.Green)
+        val beforeContinue = viewModel.uiState.value.copy(
+            grid = viewModel.uiState.value.grid.copy(cells = currentGrid),
+            score = 5100,
+            tokens = 130,
+            isGameOver = true,
+            isWin = true,
+            isWinConditionSkipped = false,
+            availableBlocks = listOf(singleCellBlock)
+        )
+
+        val field = GameViewModel::class.java.getDeclaredField("_uiState")
+        field.isAccessible = true
+        @Suppress("UNCHECKED_CAST")
+        val stateFlow = field.get(viewModel) as kotlinx.coroutines.flow.MutableStateFlow<com.jn.paxl.model.GameUiState>
+        stateFlow.value = beforeContinue
+
+        viewModel.continuePlayAfterGameOver()
+
+        val after = viewModel.uiState.value
+        assertFalse(after.isGameOver)
+        assertFalse(after.isWin)
+        assertTrue(after.isWinConditionSkipped)
+        assertEquals(beforeContinue.score, after.score)
+        assertEquals(beforeContinue.tokens, after.tokens)
+        assertEquals(currentGrid, after.grid.cells)
+        assertEquals(beforeContinue.availableBlocks, after.availableBlocks)
+
+        advanceUntilIdle()
+        coVerify(exactly = 0) { dataStoreRepository.saveCoins(any()) }
     }
 }

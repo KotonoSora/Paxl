@@ -25,7 +25,7 @@ private val NeonColorScheme = darkColorScheme(
 )
 
 @Composable
-fun PaxlTheme(
+fun GameTheme(
     content: @Composable () -> Unit
 ) {
     val colorScheme = NeonColorScheme
