@@ -1,8 +1,6 @@
 package com.jn.paxl.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
@@ -35,10 +32,10 @@ import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jn.paxl.model.GameUiState
 import com.jn.paxl.ui.LocalSoundManager
+import com.jn.paxl.ui.components.GameScreenScaffold
 import com.jn.paxl.ui.components.NeonButton
 import com.jn.paxl.ui.components.NeonText
 import com.jn.paxl.ui.components.NeonTitle
-import com.jn.paxl.ui.theme.BackgroundDark
 import com.jn.paxl.ui.theme.GameTheme
 import com.jn.paxl.ui.theme.NeonBlue
 import com.jn.paxl.ui.theme.NeonCyan
@@ -82,16 +79,11 @@ fun HomeScreenContent(
 ) {
     val soundManager = LocalSoundManager.current
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .safeContentPadding()
-            .background(BackgroundDark)
-    ) {
+    GameScreenScaffold {
         Row(
             modifier = Modifier
-                .align(Alignment.TopEnd)
                 .fillMaxWidth()
+                .align(Alignment.End)
                 .padding(horizontal = 12.dp, vertical = 2.dp)
                 .zIndex(1f),
             verticalAlignment = Alignment.CenterVertically,
@@ -134,9 +126,7 @@ fun HomeScreenContent(
         }
 
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .safeContentPadding(),
+            modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -149,29 +139,23 @@ fun HomeScreenContent(
             Spacer(modifier = Modifier.height(36.dp))
 
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 NeonButton(
-                    text = "PLAY GAME",
-                    color = NeonGreen,
-                    onClick = {
+                    text = "PLAY GAME", color = NeonGreen, onClick = {
                         soundManager?.playClick()
                         onPlayClick()
-                    },
-                    icon = Icons.Default.Gamepad
+                    }, icon = Icons.Default.Gamepad
                 )
 
                 NeonButton(
-                    text = "DAILY CHALLENGE",
-                    color = NeonYellow,
+                    text = "DAILY CHALLENGE", color = NeonYellow,
                     onClick = {
                         soundManager?.playClick()
                         onDailyChallengeClick()
                     },
-                    icon = Icons.Default.CalendarToday
+                    icon = Icons.Default.CalendarToday,
                 )
 
                 NeonButton(

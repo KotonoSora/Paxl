@@ -17,6 +17,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.jn.paxl.model.PlayMode
 import com.jn.paxl.ui.components.GameBackHeader
 import com.jn.paxl.ui.components.GameScreenScaffold
 import com.jn.paxl.ui.components.NeonButton
@@ -32,7 +33,7 @@ fun DailyChallengeScreen(
 ) {
     DailyChallengeScreenContent(
         onBack = onBack, onStartChallenge = {
-            viewModel.startNewGame()
+            viewModel.startNewGame(mode = PlayMode.DAILY)
             onStartChallenge()
         })
 }
@@ -43,7 +44,7 @@ fun DailyChallengeScreenContent(
 ) {
     GameScreenScaffold {
         GameBackHeader(
-            title = "DAILY", titleColor = NeonYellow, titleFontSize = 40, onBack = onBack
+            title = "DAILY", titleColor = NeonYellow, titleFontSize = 24, onBack = onBack
         )
 
         Spacer(Modifier.height(48.dp))

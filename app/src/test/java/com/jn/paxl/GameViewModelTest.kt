@@ -9,10 +9,12 @@ import com.jn.paxl.application.gameplay.UndoMoveUseCase
 import com.jn.paxl.application.shop.ObserveShopUiStateUseCase
 import com.jn.paxl.application.shop.ShopUseCases
 import com.jn.paxl.domain.gameplay.port.BlockCatalog
-import com.jn.paxl.repository.BillingStatus
 import com.jn.paxl.model.Block
 import com.jn.paxl.model.Coordinate
+import com.jn.paxl.model.GameUiState
+import com.jn.paxl.model.PlayMode
 import com.jn.paxl.repository.BillingRepository
+import com.jn.paxl.repository.BillingStatus
 import com.jn.paxl.repository.DataStoreRepository
 import com.jn.paxl.viewmodel.GameViewModel
 import io.mockk.coVerify
@@ -20,8 +22,8 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -239,7 +241,7 @@ class GameViewModelTest {
         val field = GameViewModel::class.java.getDeclaredField("_uiState")
         field.isAccessible = true
         @Suppress("UNCHECKED_CAST")
-        val stateFlow = field.get(viewModel) as kotlinx.coroutines.flow.MutableStateFlow<com.jn.paxl.model.GameUiState>
+        val stateFlow = field.get(viewModel) as MutableStateFlow<GameUiState>
         stateFlow.value = beforeContinue
 
         viewModel.continuePlayAfterGameOver()
@@ -274,7 +276,7 @@ class GameViewModelTest {
         val field = GameViewModel::class.java.getDeclaredField("_uiState")
         field.isAccessible = true
         @Suppress("UNCHECKED_CAST")
-        val stateFlow = field.get(viewModel) as kotlinx.coroutines.flow.MutableStateFlow<com.jn.paxl.model.GameUiState>
+        val stateFlow = field.get(viewModel) as MutableStateFlow<GameUiState>
         stateFlow.value = beforeContinue
 
         viewModel.continuePlayAfterGameOver()
@@ -304,7 +306,7 @@ class GameViewModelTest {
         val field = GameViewModel::class.java.getDeclaredField("_uiState")
         field.isAccessible = true
         @Suppress("UNCHECKED_CAST")
-        val stateFlow = field.get(viewModel) as kotlinx.coroutines.flow.MutableStateFlow<com.jn.paxl.model.GameUiState>
+        val stateFlow = field.get(viewModel) as MutableStateFlow<GameUiState>
         stateFlow.value = beforeContinue
 
         viewModel.continuePlayAfterGameOver()
@@ -320,5 +322,34 @@ class GameViewModelTest {
 
         advanceUntilIdle()
         coVerify(exactly = 0) { dataStoreRepository.saveCoins(any()) }
+    }
+
+    @Test
+    fun `daily challenge win grants 50 token bonus at 5000 score`() = runTest {
+        advanceUntilIdle()
+
+        viewModel.startNewGame(mode = PlayMode.DAILY)
+        val startedDaily = viewModel.uiState.value
+        assertEquals(PlayMode.DAILY, startedDaily.playMode)
+        assertEquals(5000, startedDaily.targetScore)
+        assertEquals(50, startedDaily.winTokenReward)
+
+        val field = GameViewModel::class.java.getDeclaredField("_uiState")
+        field.isAccessible = true
+        @Suppress("UNCHECKED_CAST")
+        val stateFlow = field.get(viewModel) as MutableStateFlow<GameUiState>
+        stateFlow.value = startedDaily.copy(score = 4990)
+
+        val firstBlock = stateFlow.value.availableBlocks.first()
+        viewModel.onBlockPlaced(firstBlock, Coordinate(0, 0))
+
+        val won = viewModel.uiState.value
+        assertTrue(won.isWin)
+        assertTrue(won.isGameOver)
+        assertTrue(won.score >= 5000)
+        assertEquals(150, won.tokens)
+
+        advanceUntilIdle()
+        coVerify(exactly = 1) { dataStoreRepository.saveCoins(150) }
     }
 }

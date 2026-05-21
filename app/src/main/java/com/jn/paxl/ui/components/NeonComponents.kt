@@ -38,6 +38,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jn.paxl.ui.theme.BackgroundDark
@@ -52,7 +53,8 @@ fun NeonButton(
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
     enabled: Boolean = true,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    textSize: TextUnit = 16.sp
 ) {
     val shape = RoundedCornerShape(50)
     val contentAlpha = if (enabled) 1f else 0.45f
@@ -92,7 +94,7 @@ fun NeonButton(
             Text(
                 text = text,
                 color = color,
-                fontSize = 16.sp,
+                fontSize = textSize,
                 fontFamily = RetroFont,
                 style = TextStyle(
                     shadow = Shadow(

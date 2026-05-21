@@ -17,7 +17,7 @@ class StartNewGameUseCase(
         val (targetScore, winTokenReward) = when (mode) {
             PlayMode.CLASSIC -> 5000 to 25
             PlayMode.LEVELS -> (700 + (level * 350)) to (10 + (level * 2))
-            PlayMode.DAILY -> 2200 to 40
+            PlayMode.DAILY -> 5000 to 50
         }
 
         return GameUiState(

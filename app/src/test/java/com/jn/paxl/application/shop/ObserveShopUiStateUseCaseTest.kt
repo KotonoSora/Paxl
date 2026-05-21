@@ -1,7 +1,7 @@
 package com.jn.paxl.application.shop
 
-import com.jn.paxl.domain.shop.ShopUiState
 import com.jn.paxl.domain.shop.ShopProduct
+import com.jn.paxl.domain.shop.ShopUiState
 import com.jn.paxl.repository.BillingStatus
 import com.jn.paxl.repository.StoreProduct
 import kotlinx.coroutines.ExperimentalCoroutinesApi
