@@ -6,6 +6,9 @@
 
 # Hilt
 -keep class * extends androidx.lifecycle.ViewModel
+# Keep app entry point classes referenced from AndroidManifest.
+-keep class com.jn.paxl.GameApplication { *; }
+-keep class * extends android.app.Application { *; }
 
 # Room
 -keep class * extends androidx.room.RoomDatabase
