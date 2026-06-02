@@ -14,7 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.jn.paxl.ui.GameNavigation
 import com.jn.paxl.ui.LocalSoundManager
 import com.jn.paxl.ui.SoundManager
@@ -46,7 +46,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val context = LocalContext.current
             val soundManager = remember { SoundManager(context) }
-            val viewModel: GameViewModel = viewModel()
+            val viewModel: GameViewModel = hiltViewModel()
             val uiState by viewModel.uiState.collectAsState()
 
             LaunchedEffect(uiState.soundEnabled) {

@@ -6,9 +6,21 @@
 
 # Hilt
 -keep class * extends androidx.lifecycle.ViewModel
+
 # Keep app entry point classes referenced from AndroidManifest.
 -keep class com.jn.paxl.GameApplication { *; }
 -keep class * extends android.app.Application { *; }
+
+# Hilt generated classes (critical for preventing ClassNotFoundException)
+-keep class dagger.hilt.** { *; }
+-keep class dagger.hilt.internal.** { *; }
+-keep class hilt_aggregated_deps.** { *; }
+-keepclasseswithmembers,allowshrinking class * {
+    @dagger.hilt.*.* <fields>;
+}
+-keepclasseswithmembers,allowshrinking class * {
+    @dagger.hilt.*.* <methods>;
+}
 
 # Room
 -keep class * extends androidx.room.RoomDatabase
