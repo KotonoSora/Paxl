@@ -5,7 +5,6 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.devtools.ksp)
-    alias(libs.plugins.hilt)
 }
 
 configure<ApplicationExtension> {
@@ -15,8 +14,8 @@ configure<ApplicationExtension> {
     defaultConfig {
         applicationId = "com.jn.paxl"
         minSdk = 24
-        versionCode = 4
-        versionName = "2.2.0"
+        versionCode = 5
+        versionName = "2.3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -75,9 +74,6 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.compose.ui.text.google.fonts)
     implementation(libs.billing.ktx)
-    implementation(libs.hilt.android)
-    implementation(libs.hilt.navigation.compose)
-
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.androidx.core)
@@ -91,5 +87,4 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     ksp(libs.androidx.room.compiler)
-    ksp(libs.hilt.compiler)
 }

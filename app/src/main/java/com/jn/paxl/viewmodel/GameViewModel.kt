@@ -4,6 +4,8 @@ import android.app.Activity
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.jn.paxl.application.gameplay.GameplayUseCases
 import com.jn.paxl.application.shop.ShopUseCases
 import com.jn.paxl.domain.shop.ShopUiState
@@ -14,7 +16,7 @@ import com.jn.paxl.model.LeaderboardEntry
 import com.jn.paxl.model.PlayMode
 import com.jn.paxl.repository.BillingRepository
 import com.jn.paxl.repository.DataStoreRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
+
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -25,10 +27,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class GameViewModel @Inject constructor(
+class GameViewModel(
     private val repository: DataStoreRepository,
     private val billingRepository: BillingRepository,
     private val gameplayUseCases: GameplayUseCases,
@@ -226,5 +226,20 @@ class GameViewModel @Inject constructor(
                 .thenBy { it.durationSeconds }
                 .thenByDescending { it.recordedAtEpochMs }
         )
+    }
+
+    companion object {
+        val Factory: androidx.lifecycle.ViewModelProvider.Factory = androidx.lifecycle.viewmodel.viewModelFactory {
+            initializer {
+                val application = (this[androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as com.jn.paxl.GameApplication)
+                val container = application.container
+                GameViewModel(
+                    repository = container.dataStoreRepository,
+                    billingRepository = container.billingRepository,
+                    gameplayUseCases = container.gameplayUseCases,
+                    shopUseCases = container.shopUseCases
+                )
+            }
+        }
     }
 }

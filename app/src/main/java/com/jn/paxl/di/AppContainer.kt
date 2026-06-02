@@ -11,37 +11,26 @@ import com.jn.paxl.application.shop.ShopUseCases
 import com.jn.paxl.infrastructure.gameplay.ShapeLibraryBlockCatalog
 import com.jn.paxl.repository.BillingRepository
 import com.jn.paxl.repository.DataStoreRepository
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
 
-@Module
-@InstallIn(SingletonComponent::class)
-object AppModule {
+interface AppContainer {
+    val dataStoreRepository: DataStoreRepository
+    val billingRepository: BillingRepository
+    val gameplayUseCases: GameplayUseCases
+    val shopUseCases: ShopUseCases
+}
 
-    @Provides
-    @Singleton
-    fun provideDataStoreRepository(@ApplicationContext context: Context): DataStoreRepository {
-        return DataStoreRepository(context)
+class DefaultAppContainer(private val context: Context) : AppContainer {
+    override val dataStoreRepository: DataStoreRepository by lazy {
+        DataStoreRepository(context)
     }
 
-    @Provides
-    @Singleton
-    fun provideBillingRepository(
-        @ApplicationContext context: Context,
-        dataStoreRepository: DataStoreRepository
-    ): BillingRepository {
-        return BillingRepository(context, dataStoreRepository)
+    override val billingRepository: BillingRepository by lazy {
+        BillingRepository(context, dataStoreRepository)
     }
 
-    @Provides
-    @Singleton
-    fun provideGameplayUseCases(): GameplayUseCases {
+    override val gameplayUseCases: GameplayUseCases by lazy {
         val catalog = ShapeLibraryBlockCatalog
-        return GameplayUseCases(
+        GameplayUseCases(
             startNewGame = StartNewGameUseCase(catalog),
             placeBlock = PlaceBlockUseCase(catalog),
             undoMove = UndoMoveUseCase(),
@@ -49,10 +38,8 @@ object AppModule {
         )
     }
 
-    @Provides
-    @Singleton
-    fun provideShopUseCases(): ShopUseCases {
-        return ShopUseCases(
+    override val shopUseCases: ShopUseCases by lazy {
+        ShopUseCases(
             observeShopUiState = ObserveShopUiStateUseCase()
         )
     }
