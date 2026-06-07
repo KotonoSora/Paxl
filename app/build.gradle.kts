@@ -4,7 +4,6 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.devtools.ksp)
-    alias(libs.plugins.hilt)
 }
 
 configure<ApplicationExtension> {
@@ -14,9 +13,8 @@ configure<ApplicationExtension> {
     defaultConfig {
         applicationId = "com.jn.paxl"
         minSdk = 24
-        targetSdk = 36
-        versionCode = 2
-        versionName = "2.0.0"
+        versionCode = 6
+        versionName = "2.4.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -26,8 +24,7 @@ configure<ApplicationExtension> {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro",
+                getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro",
             )
         }
     }
@@ -69,10 +66,6 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.compose.ui.text.google.fonts)
     implementation(libs.billing.ktx)
-    implementation(libs.hilt.android)
-    implementation(libs.hilt.navigation.compose)
-    ksp(libs.hilt.compiler)
-
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.androidx.core)

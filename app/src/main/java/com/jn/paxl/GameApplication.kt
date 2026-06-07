@@ -1,7 +1,14 @@
 package com.jn.paxl
 
 import android.app.Application
-import dagger.hilt.android.HiltAndroidApp
+import com.jn.paxl.di.AppContainer
+import com.jn.paxl.di.DefaultAppContainer
 
-@HiltAndroidApp
-class GameApplication : Application()
+class GameApplication : Application() {
+    lateinit var container: AppContainer
+
+    override fun onCreate() {
+        super.onCreate()
+        container = DefaultAppContainer(this)
+    }
+}

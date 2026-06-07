@@ -1,16 +1,23 @@
 package com.jn.paxl
 
 import android.content.pm.PackageManager
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class PaxlAppInstrumentedTest {
+class MainScreensInstrumentedTest {
+
+    @get:Rule
+    val composeTestRule = createAndroidComposeRule<MainActivity>()
 
     @Test
     fun app_context_package_name_is_correct() {
@@ -49,5 +56,11 @@ class PaxlAppInstrumentedTest {
 
         assertTrue(requested.contains("android.permission.INTERNET"))
         assertTrue(requested.contains("com.android.vending.BILLING"))
+    }
+
+    @Test
+    fun home_screen_is_displayed() {
+        composeTestRule.onNodeWithText("PAXL").assertIsDisplayed()
+        composeTestRule.onNodeWithText("PLAY GAME").assertIsDisplayed()
     }
 }

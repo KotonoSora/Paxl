@@ -20,9 +20,7 @@ import com.jn.paxl.ui.LocalSoundManager
 import com.jn.paxl.ui.SoundManager
 import com.jn.paxl.ui.theme.GameTheme
 import com.jn.paxl.viewmodel.GameViewModel
-import dagger.hilt.android.AndroidEntryPoint
 
-@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private fun enterFullscreen() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -46,7 +44,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val context = LocalContext.current
             val soundManager = remember { SoundManager(context) }
-            val viewModel: GameViewModel = viewModel()
+            val viewModel: GameViewModel = viewModel(factory = GameViewModel.Factory)
             val uiState by viewModel.uiState.collectAsState()
 
             LaunchedEffect(uiState.soundEnabled) {

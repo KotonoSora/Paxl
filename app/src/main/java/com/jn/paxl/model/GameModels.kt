@@ -36,7 +36,7 @@ data class GameUiState(
     val targetScore: Int = 5000,
     val winTokenReward: Int = 25,
     val continueTokenCost: Int = 30,
-    val sessionStartMs: Long = System.currentTimeMillis(),
+    val sessionStartMs: Long = 0L,
     val score: Int = 0,
     val tokens: Int = 0,
     val isGameOver: Boolean = false,
