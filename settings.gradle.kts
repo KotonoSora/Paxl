@@ -26,3 +26,9 @@ dependencyResolutionManagement {
 
 rootProject.name = "Paxl"
 include(":app")
+include(":paxl-engine")
+include(":core-billing")
+include(":core-shop-coins")
+include(":core-ui")
+include(":paxl-shop")
+include(":paxl-ui")
