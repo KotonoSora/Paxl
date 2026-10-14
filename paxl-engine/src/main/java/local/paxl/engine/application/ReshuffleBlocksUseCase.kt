@@ -12,7 +12,7 @@ class ReshuffleBlocksUseCase(
 ) {
     operator fun invoke(currentState: GameState): GameState {
         return currentState.copy(
-            availableBlocks = blockCatalog.randomBlocks(3)
+            availableBlocks = blockCatalog.deal(3)
         )
     }
 }

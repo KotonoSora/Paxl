@@ -1,5 +1,6 @@
 package local.paxl.ui.presentation.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
@@ -21,8 +22,11 @@ import local.paxl.engine.domain.model.GameState
 import local.paxl.engine.domain.model.PlayMode
 import local.paxl.engine.domain.model.RunEndCause
 import local.paxl.engine.domain.model.RunRecord
+import local.paxl.engine.domain.service.DropSnapping
+import local.paxl.engine.domain.service.PlacementRules
 import local.paxl.shop.domain.service.PowerCosts
 import local.paxl.ui.application.RecordGameFinishedUseCase
+import local.paxl.ui.presentation.components.DragLogTag
 
 class GameViewModel(
     private val coinAccount: CoinAccount,
@@ -45,7 +49,7 @@ class GameViewModel(
     private val _lastRunNewBest = MutableStateFlow(false)
     val lastRunNewBest: StateFlow<Boolean> = _lastRunNewBest.asStateFlow()
 
-    private val gridHistory = mutableListOf<Map<Coordinate, Long?>>()
+    private val stateHistory = mutableListOf<GameState>()
 
     private var sessionStartedAt: Long = System.currentTimeMillis()
 
@@ -60,13 +64,14 @@ class GameViewModel(
     fun startNewGame(level: Int = 1, mode: PlayMode = PlayMode.CLASSIC) {
         resetSessionCounters()
         _gameState.value = startNewGameUseCase(level, mode)
-        gridHistory.clear()
+        stateHistory.clear()
         _lastRunNewBest.value = false
     }
 
     /**
      * Places [block] at [gridPosition]. Returns true when the placement was
      * legal (callers play the place sound); invalid drops are ignored.
+     * The pre-move state is pushed for undo before applying the move.
      */
     fun onBlockPlaced(block: Block, gridPosition: Coordinate): Boolean {
         val currentState = _gameState.value
@@ -74,9 +79,65 @@ class GameViewModel(
 
         val placeResult = placeBlockUseCase(currentState, block, gridPosition) ?: return false
 
-        gridHistory.add(placeResult.previousGridSnapshot)
+        commitPlaceResult(currentState, placeResult.newState, placeResult.clearInfo != null)
+        return true
+    }
 
-        var finalState = placeResult.newState
+    /**
+     * Finger-release drop: resolves the ghost and places it on the SAME live
+     * grid object, read synchronously here. The screen only maps the release
+     * finger to a pointer cell (fresh gesture state, no board data); the board
+     * itself is never taken from a composable closure, so a stale composed
+     * grid can no longer resolve a "fit" that the live grid then rejects.
+     * A returned origin is guaranteed placeable.
+     */
+    fun onDropAtPointer(block: Block, pointerCell: Coordinate): Boolean {
+        val currentState = _gameState.value
+        if (currentState.isGameOver) {
+            Log.d(DragLogTag, "place REJECT block=${block.id} reason=game-over")
+            return false
+        }
+        Log.d(
+            DragLogTag,
+            "place TRY block=${block.id} shape=${block.shape} pointerCell=$pointerCell " +
+                "filled=${currentState.grid.filledCount}"
+        )
+        val preview = DropSnapping.previewDrop(block, pointerCell, currentState.grid)
+        val origin = preview.origin
+        if (origin == null) {
+            Log.d(DragLogTag, "place REJECT block=${block.id} reason=no-fit-near")
+            return false
+        }
+
+        val placeResult = placeBlockUseCase.placeAtPreview(currentState, preview)
+        if (placeResult == null) {
+            val inTray = currentState.availableBlocks.any { it.id == block.id }
+            val fits = PlacementRules.canPlaceBlock(block, origin, currentState.grid)
+            Log.d(
+                DragLogTag,
+                "place REJECT block=${block.id} origin=$origin " +
+                    "reason=${if (!inTray) "not-in-tray" else if (!fits) "no-fit" else "unknown"}"
+            )
+            return false
+        }
+
+        commitPlaceResult(currentState, placeResult.newState, placeResult.clearInfo != null)
+        Log.d(
+            DragLogTag,
+            "place OK block=${block.id} origin=$origin " +
+                "lines=${placeResult.clearInfo?.linesCleared ?: 0} score=${placeResult.newState.score}"
+        )
+        return true
+    }
+
+    private fun commitPlaceResult(
+        currentState: GameState,
+        newState: GameState,
+        didClear: Boolean
+    ) {
+        stateHistory.add(currentState)
+
+        var finalState = newState
         val reachedWinTarget =
             !finalState.isWinConditionSkipped && finalState.score >= finalState.targetScore
         if (reachedWinTarget) {
@@ -89,8 +150,8 @@ class GameViewModel(
             endGame(finalState.isWin)
         }
 
-        if (placeResult.clearInfo != null) {
-            val animationId = placeResult.newState.clearAnimationId
+        if (didClear) {
+            val animationId = newState.clearAnimationId
             viewModelScope.launch {
                 delay(1000)
                 _gameState.update { state ->
@@ -102,7 +163,6 @@ class GameViewModel(
                 }
             }
         }
-        return true
     }
 
     fun continuePlayAfterGameOver() {
@@ -134,15 +194,15 @@ class GameViewModel(
                 linesCleared = currentState.linesCleared,
                 sessionStartMs = currentState.sessionStartMs
             )
-            gridHistory.clear()
+            stateHistory.clear()
         }
     }
 
     fun undoMove() {
-        if (_gameState.value.isGameOver || gridHistory.isEmpty()) return
+        if (_gameState.value.isGameOver || stateHistory.isEmpty()) return
         viewModelScope.launch {
             if (coinAccount.spendCoins(PowerCosts.UNDO_COST)) {
-                val updated = undoMoveUseCase(_gameState.value, gridHistory) ?: return@launch
+                val updated = undoMoveUseCase(stateHistory) ?: return@launch
                 sessionUndoUses++
                 _gameState.value = updated
             }

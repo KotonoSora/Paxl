@@ -1,5 +1,6 @@
 package local.paxl.ui.presentation.components
 
+import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -27,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,10 +48,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import local.paxl.engine.domain.model.Block
-import local.paxl.engine.domain.model.BlockShapes
 import local.paxl.engine.domain.model.Coordinate
 import local.paxl.engine.domain.model.GridState
-import local.paxl.engine.domain.service.GameRules
+import local.paxl.ui.presentation.screens.gameplay.tetrisPreviewBlocks
 import local.paxl.ui.presentation.theme.GameTheme
 import local.paxl.ui.presentation.theme.NeonCyan
 import kotlinx.coroutines.launch
@@ -60,11 +61,27 @@ import kotlin.math.roundToInt
 /** Engine ARGB longs render as Compose colors at this boundary. */
 private fun Long.toDisplayColor(): Color = Color(this)
 
+/** Logcat tag for drag/drop tracking (filter: `adb logcat -s PaxlDrag`). */
+const val DragLogTag = "PaxlDrag"
+
+/**
+ * How far above the finger the dragged piece floats, so the piece and its
+ * landing ghost stay visible while dragging. Screens subtract this from the
+ * reported pointer and map/snaps from the lifted anchor for BOTH the ghost
+ * and the drop.
+ */
+val DragLiftDp = 64.dp
+
 @Composable
 fun GameGrid(
     gridState: GridState,
     draggedBlock: Block?,
-    draggedOffset: Offset?,
+    /** Lifted piece anchor (finger minus [DragLiftDp]); null when not dragging. */
+    anchorOffset: Offset?,
+    /** Snapped landing cell from `DropSnapping.snapToPlacement`; null = no fit. */
+    dropCell: Coordinate?,
+    /** Rows/cols that would blast on drop (from `DropSnapping.previewDrop`). */
+    wouldClear: Set<Coordinate> = emptySet(),
     isClearing: Boolean,
     clearingCells: Map<Coordinate, Long?>,
     gridOffset: Offset,
@@ -190,15 +207,58 @@ fun GameGrid(
                 }
             }
 
-            // Draw Ghost Block Preview (Landing Zone)
-            if (draggedBlock != null && draggedOffset != null) {
-                val relativeX = draggedOffset.x - gridOffset.x
-                val relativeY = draggedOffset.y - gridOffset.y
+            // Draw Blast Highlight: rows/cols that would clear on drop.
+            // Drawn under the ghost so the landing piece stays on top.
+            if (draggedBlock != null && dropCell != null && wouldClear.isNotEmpty()) {
+                wouldClear.forEach { coord ->
+                    val targetTopLeft = Offset(coord.x * cellSizePx, coord.y * cellSizePx)
+                    drawRoundRect(
+                        color = Color.White.copy(alpha = 0.18f),
+                        topLeft = targetTopLeft,
+                        size = Size(cellSizePx, cellSizePx),
+                        cornerRadius = CornerRadius(4.dp.toPx())
+                    )
+                    drawRoundRect(
+                        color = Color.White.copy(alpha = 0.7f),
+                        topLeft = targetTopLeft,
+                        size = Size(cellSizePx, cellSizePx),
+                        cornerRadius = CornerRadius(4.dp.toPx()),
+                        style = Stroke(width = 1.5.dp.toPx())
+                    )
+                }
+            }
+
+            // Draw Ghost Block Preview (Landing Zone) at the snapped cell.
+            // The snap already guarantees a fit, so the ghost always matches
+            // the drop. When the anchor is over the grid but nothing fits,
+            // tint the covered cells red instead.
+            if (draggedBlock != null && dropCell != null) {
+                val draggedColor = draggedBlock.colorArgb.toDisplayColor()
+                draggedBlock.shape.forEach { offset ->
+                    val targetTopLeft =
+                        Offset(
+                            (dropCell.x + offset.x) * cellSizePx,
+                            (dropCell.y + offset.y) * cellSizePx
+                        )
+                    drawRoundRect(
+                        color = draggedColor.copy(alpha = glowAlpha),
+                        topLeft = targetTopLeft,
+                        size = Size(cellSizePx, cellSizePx),
+                        cornerRadius = CornerRadius(4.dp.toPx())
+                    )
+                    drawRoundRect(
+                        color = draggedColor,
+                        topLeft = targetTopLeft,
+                        size = Size(cellSizePx, cellSizePx),
+                        cornerRadius = CornerRadius(4.dp.toPx()),
+                        style = Stroke(width = 2.dp.toPx())
+                    )
+                }
+            } else if (draggedBlock != null && anchorOffset != null) {
+                val relativeX = anchorOffset.x - gridOffset.x
+                val relativeY = anchorOffset.y - gridOffset.y
                 val gridX = floor(relativeX / cellSizePx).toInt()
                 val gridY = floor(relativeY / cellSizePx).toInt()
-
-                val canPlace =
-                    GameRules.canPlaceBlock(draggedBlock, Coordinate(gridX, gridY), gridState)
 
                 val isOverGrid = draggedBlock.shape.any { offset ->
                     val x = gridX + offset.x
@@ -206,27 +266,8 @@ fun GameGrid(
                     x in 0 until gridState.size && y in 0 until gridState.size
                 }
 
-                val draggedColor = draggedBlock.colorArgb.toDisplayColor()
-                if (canPlace) {
-                    draggedBlock.shape.forEach { offset ->
-                        val targetTopLeft =
-                            Offset((gridX + offset.x) * cellSizePx, (gridY + offset.y) * cellSizePx)
-                        drawRoundRect(
-                            color = draggedColor.copy(alpha = glowAlpha),
-                            topLeft = targetTopLeft,
-                            size = Size(cellSizePx, cellSizePx),
-                            cornerRadius = CornerRadius(4.dp.toPx())
-                        )
-                        drawRoundRect(
-                            color = draggedColor,
-                            topLeft = targetTopLeft,
-                            size = Size(cellSizePx, cellSizePx),
-                            cornerRadius = CornerRadius(4.dp.toPx()),
-                            style = Stroke(width = 2.dp.toPx())
-                        )
-                    }
-                } else if (isOverGrid) {
-                    // Show conflict color when block overlaps existing cells or is out of bounds
+                if (isOverGrid) {
+                    // Show conflict color when no snapped placement fits here.
                     val conflictColor = Color(0xFFFF3333)
                     draggedBlock.shape.forEach { offset ->
                         val x = gridX + offset.x
@@ -262,14 +303,35 @@ fun BlockItem(
     gridCellSize: Float,
     isBeingDragged: Boolean = false,
     onDragging: (Block?, Offset?) -> Unit,
-    onPlace: (Coordinate) -> Unit
+    /** True finger position in root coordinates; the caller lifts, maps and snaps it. */
+    onPlace: (Offset) -> Unit
 ) {
     var dragOffset by remember { mutableStateOf(Offset.Zero) }
     var itemPosition by remember { mutableStateOf(Offset.Zero) }
+    // Touch point inside the item when the gesture started. Reporting
+    // itemPosition alone ignores where the finger grabbed the piece (up to a
+    // full item-size error) plus touch slop, so the ghost/drop disagreed with
+    // the visible piece by several cells and borderline drops cancelled.
+    var touchOffset by remember { mutableStateOf(Offset.Zero) }
     val density = LocalDensity.current
     val scaleAnim = remember { Animatable(1f) }
     val scope = rememberCoroutineScope()
     val blockColor = block.colorArgb.toDisplayColor()
+
+    /** Finger position in root coordinates from the tracked gesture. */
+    fun fingerRoot(): Offset = itemPosition + touchOffset + dragOffset
+
+    // pointerInput(block.id) never restarts mid-drag, so it would keep calling
+    // the onPlace/onDragging lambdas from drag-start (stale dropCell). Always
+    // route through the latest callbacks so release uses the current ghost.
+    val latestOnDragging by rememberUpdatedState(onDragging)
+    val latestOnPlace by rememberUpdatedState(onPlace)
+    // Same staleness applies to the measured grid cell size: pointerInput
+    // captures the first-composition value (0f, grid not laid out yet) and
+    // never refreshes while block.id is unchanged, so the release guard below
+    // must read the latest measurement or every drop early-returns and pieces
+    // can never land on the board.
+    val latestGridCellSize by rememberUpdatedState(gridCellSize)
 
     Box(
         modifier = Modifier
@@ -280,35 +342,50 @@ fun BlockItem(
             .offset { IntOffset(dragOffset.x.roundToInt(), dragOffset.y.roundToInt()) }
             .scale(scaleAnim.value)
             .pointerInput(block.id) {
-                detectDragGestures(onDragStart = {
+                detectDragGestures(onDragStart = { start ->
+                    touchOffset = start
                     scope.launch { scaleAnim.animateTo(1.2f) }
-                    onDragging(block, itemPosition + dragOffset)
+                    Log.d(
+                        DragLogTag,
+                        "dragStart block=${block.id} shape=${block.shape} " +
+                            "touch=$touchOffset item=$itemPosition finger=${fingerRoot()}"
+                    )
+                    latestOnDragging(block, fingerRoot())
                 }, onDragEnd = {
-                    if (gridCellSize <= 0f) {
-                        onDragging(null, null)
+                    if (latestGridCellSize <= 0f) {
+                        Log.d(
+                            DragLogTag,
+                            "dragEnd CANCEL block=${block.id} reason=grid-unmeasured " +
+                                "finger=${fingerRoot()}"
+                        )
+                        latestOnDragging(null, null)
                         dragOffset = Offset.Zero
+                        touchOffset = Offset.Zero
                         scope.launch { scaleAnim.animateTo(1f) }
                         return@detectDragGestures
                     }
 
-                    val dropPosition = itemPosition + dragOffset
-                    val relativeX = dropPosition.x - gridOffset.x
-                    val relativeY = dropPosition.y - gridOffset.y
-                    val gridX = floor(relativeX / gridCellSize).toInt()
-                    val gridY = floor(relativeY / gridCellSize).toInt()
-
-                    onPlace(Coordinate(gridX, gridY))
-                    onDragging(null, null)
+                    Log.d(
+                        DragLogTag,
+                        "dragEnd block=${block.id} shape=${block.shape} " +
+                            "finger=${fingerRoot()} gridCellSize=$latestGridCellSize"
+                    )
+                    latestOnPlace(fingerRoot())
+                    latestOnDragging(null, null)
                     dragOffset = Offset.Zero
+                    touchOffset = Offset.Zero
                     scope.launch { scaleAnim.animateTo(1f) }
                 }, onDragCancel = {
-                    onDragging(null, null)
+                    Log.d(DragLogTag, "dragCancel block=${block.id}")
+                    latestOnDragging(null, null)
                     dragOffset = Offset.Zero
+                    touchOffset = Offset.Zero
                     scope.launch { scaleAnim.animateTo(1f) }
                 }, onDrag = { change, dragAmount ->
                     change.consume()
                     dragOffset += dragAmount
-                    onDragging(block, itemPosition + dragOffset)
+                    Log.d(DragLogTag, "dragMove block=${block.id} finger=${fingerRoot()}")
+                    latestOnDragging(block, fingerRoot())
                 })
             }) {
         val sizeDp = with(density) { (cellSize * 3).toDp() }
@@ -414,7 +491,7 @@ private fun DraggedBlockOverlayAllShapesPreview() {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            BlockShapes.getPreviewBlocks().chunked(3).forEach { rowBlocks ->
+            tetrisPreviewBlocks().chunked(3).forEach { rowBlocks ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
@@ -445,7 +522,7 @@ private fun BlockItemAllShapesPreview() {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            BlockShapes.getPreviewBlocks().chunked(3).forEach { rowBlocks ->
+            tetrisPreviewBlocks().chunked(3).forEach { rowBlocks ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly,
@@ -461,7 +538,7 @@ private fun BlockItemAllShapesPreview() {
                                 cellSize = 64f,
                                 gridCellSize = 64f,
                                 onDragging = { _, _ -> },
-                                onPlace = {}
+                                onPlace = { _ -> }
                             )
                         }
                     }

@@ -4,6 +4,10 @@ package local.paxl.engine.domain.model
  * Engine-owned game state (pure Kotlin, no Compose/Android). Coins, audio
  * flags and high score live in core flows and are combined at the UI layer;
  * only run-scoped gameplay state lives here.
+ *
+ * Block Blast model: 12x12 board, tray of 3, combo/streak multiplier.
+ * [combo] is a value object owning the chain transition
+ * (see [Combo.onPlacement]); run counters and presentation state stay here.
  */
 data class GameState(
     val grid: GridState = GridState(),
@@ -20,5 +24,6 @@ data class GameState(
     val isWinConditionSkipped: Boolean = false,
     val isClearing: Boolean = false,
     val clearAnimationId: Long = 0L,
-    val clearingCells: Map<Coordinate, Long?> = emptyMap()
+    val clearingCells: Map<Coordinate, Long?> = emptyMap(),
+    val combo: Combo = Combo()
 )

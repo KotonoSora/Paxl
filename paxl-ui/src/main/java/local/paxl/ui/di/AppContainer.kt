@@ -19,9 +19,9 @@ import local.paxl.engine.application.PlaceBlockUseCase
 import local.paxl.engine.application.ReshuffleBlocksUseCase
 import local.paxl.engine.application.StartNewGameUseCase
 import local.paxl.engine.application.UndoMoveUseCase
-import local.paxl.engine.domain.model.BlockShapes
 import local.paxl.engine.domain.repository.BlockCatalog
 import local.paxl.engine.domain.repository.RunHistoryRepository
+import local.paxl.engine.infrastructure.dealing.TetrisBlockCatalog
 import local.paxl.shop.domain.model.SkinIds
 import local.paxl.shop.domain.service.TokenPacks
 import local.paxl.shop.domain.model.TokenPackIds
@@ -75,7 +75,7 @@ class DefaultAppContainer(
     override val audioSettings: AudioSettings by lazy { settingsStore }
 
     private val blockCatalog: BlockCatalog by lazy {
-        BlockCatalog { count -> BlockShapes.randomBlocks(count) }
+        TetrisBlockCatalog()
     }
 
     private val gameDatabase: GameDatabase by lazy {
