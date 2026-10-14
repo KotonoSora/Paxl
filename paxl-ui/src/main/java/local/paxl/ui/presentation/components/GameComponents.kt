@@ -58,7 +58,7 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 
 /** Engine ARGB longs render as Compose colors at this boundary. */
-private fun Long.toDisplayColor(): Color = Color(toULong())
+private fun Long.toDisplayColor(): Color = Color(this)
 
 @Composable
 fun GameGrid(

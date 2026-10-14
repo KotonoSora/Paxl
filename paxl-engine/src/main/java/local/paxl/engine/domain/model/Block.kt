@@ -4,8 +4,7 @@ import java.util.UUID
 
 /**
  * A placeable block. Colors are ARGB longs so this module stays pure Kotlin
- * (no Compose); game-ui converts with `Color(argb.toULong())` at the render
- * boundary.
+ * (no Compose); game-ui converts with `Color(argb)` at the render boundary.
  */
 data class Block(
     val shape: List<Coordinate>,

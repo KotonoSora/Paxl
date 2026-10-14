@@ -2,7 +2,7 @@ package local.paxl.engine.domain.model
 
 /**
  * Block shape + color catalog. Colors are ARGB longs (no Compose dependency);
- * game-ui renders them via `Color(argb.toULong())`.
+ * game-ui renders them via `Color(argb)`.
  */
 object BlockShapes {
     private val blockColors = listOf(
